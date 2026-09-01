@@ -1,5 +1,6 @@
-import { getApiTransport, getHttpApiUrl } from "./config";
+import { getApiTransport, usesRemoteServerFn } from "./config";
 import type { ApiOperation } from "./endpoints";
+import { callRemoteServerFn } from "./remoteServerFn";
 
 export type ServerFnCallArgs<TData> = {
   data: TData;
@@ -23,6 +24,7 @@ async function callHttpRestApi<TData, TResult>(
   operation: ApiOperation,
   args: ServerFnCallArgs<TData>,
 ): Promise<TResult> {
+  const { getHttpApiUrl } = await import("@/lib/api/config.firebaseHttp");
   const url = getHttpApiUrl(operation);
   const headers = new Headers(args.headers);
   if (!headers.has("content-type")) {
@@ -86,13 +88,18 @@ async function callLocalServerFn<TData, TResult>(
 
 /**
  * Unified server API entry for browser code.
- * - `server-fn`: TanStack Start server functions (Vercel / local SSR).
- * - `http`: Firebase Cloud Functions Gen2 HTTPS endpoints.
+ * - Static cPanel: remote `server-fn` on the Vercel backend (cross-origin).
+ * - Vercel SSR: same-origin TanStack server functions.
+ * - `http`: Firebase Cloud Functions (emulator / optional CF deploy only).
  */
 export async function callServerApi<TData, TResult>(
   operation: ApiOperation,
   args: ServerFnCallArgs<TData>,
 ): Promise<TResult> {
+  if (usesRemoteServerFn()) {
+    return callRemoteServerFn(operation, args);
+  }
+
   const transport = getApiTransport();
   if (transport === "server-fn") {
     return callLocalServerFn(operation, args);

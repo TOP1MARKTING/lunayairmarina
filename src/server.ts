@@ -2,6 +2,11 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import {
+  applyCorsHeaders,
+  corsPreflightResponse,
+  isServerFnPath,
+} from "./server/cors";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -46,11 +51,20 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const pathname = new URL(request.url).pathname;
+    const serverFnRequest = isServerFnPath(pathname);
+
+    if (serverFnRequest && request.method === "OPTIONS") {
+      const preflight = corsPreflightResponse(request);
+      if (preflight) return preflight;
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       const normalized = await normalizeCatastrophicSsrResponse(response);
-      return withPrivatePathHeaders(request, normalized);
+      const withRobots = withPrivatePathHeaders(request, normalized);
+      return serverFnRequest ? applyCorsHeaders(request, withRobots) : withRobots;
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {

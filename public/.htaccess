@@ -1,37 +1,21 @@
 # LunayAir Marina — Apache/cPanel static hosting (SPA + prerendered public pages)
+#
+# NOTE: Production uploads use dist/.htaccess generated at build time from VITE_SITE_URL
+# (see scripts/generate-htaccess.ts). This file is a dev/preview fallback only.
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # --- HTTPS (skip on localhost for local smoke tests) ---
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP_HOST} !^localhost(:\d+)?$ [NC]
   RewriteCond %{HTTP_HOST} !^127\.0\.0\.1(:\d+)?$ [NC]
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-  # --- Apex → www (canonical host matches VITE_SITE_URL / SITE_ORIGIN) ---
-  RewriteCond %{HTTP_HOST} ^lunayairmarina\.com$ [NC]
-  RewriteRule ^ https://www.lunayairmarina.com%{REQUEST_URI} [R=301,L]
-
-  # --- SPA fallback: serve real files/directories first ---
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ index.html [L]
 </IfModule>
 
-# Admin surfaces should not be indexed (replaces Nitro X-Robots-Tag headers).
 <IfModule mod_headers.c>
   SetEnvIf Request_URI "^/admin" admin_area=1
   Header set X-Robots-Tag "noindex, nofollow, noarchive" env=admin_area
-</IfModule>
-
-# Long-cache immutable build assets (Vite hashed filenames).
-<IfModule mod_expires.c>
-  ExpiresActive On
-  ExpiresByType text/css "access plus 1 year"
-  ExpiresByType application/javascript "access plus 1 year"
-  ExpiresByType image/webp "access plus 1 year"
-  ExpiresByType image/jpeg "access plus 1 year"
-  ExpiresByType image/png "access plus 1 year"
-  ExpiresByType image/svg+xml "access plus 1 year"
-  ExpiresByType video/mp4 "access plus 1 year"
 </IfModule>

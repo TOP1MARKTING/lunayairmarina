@@ -5,9 +5,13 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { listStaticPrerenderPaths } from "./staticPrerenderRoutes";
+import { TANSTACK_SERVER_FUNCTION_IDS } from "../src/lib/api/endpoints";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = resolve(root, "dist");
+const apiBase = (
+  process.env.VITE_API_BASE_URL?.trim() || "https://www.lunayairmarina.com"
+).replace(/\/$/, "");
 
 function fail(message: string): never {
   console.error(`[verify-static-build] FAIL: ${message}`);
@@ -79,5 +83,37 @@ for (const bundlePath of sampleBundles) {
   }
 }
 ok("sample client bundles contain no obvious server secrets");
+
+let bundledJs = "";
+for (const name of assetFiles.filter((n) => n.endsWith(".js"))) {
+  bundledJs += readFileSync(resolve(assetsDir, name), "utf8");
+}
+
+if (bundledJs.includes("return`http`") || bundledJs.includes('return"http"')) {
+  fail("static bundle still uses http API transport (Firebase Cloud Functions)");
+}
+ok("API transport is not http / Cloud Functions");
+
+if (!bundledJs.includes("_serverFn")) {
+  fail("static bundle does not reference TanStack server-fn endpoints");
+}
+ok("bundle references /_serverFn remote API");
+
+if (!bundledJs.includes(apiBase.replace(/^https?:\/\//, ""))) {
+  fail(`static bundle does not embed Vercel API base (${apiBase})`);
+}
+ok(`bundle targets Vercel API base ${apiBase}`);
+
+if (bundledJs.includes("cloudfunctions.net")) {
+  fail("static bundle still contains cloudfunctions.net — must use Vercel server-fn only");
+}
+ok("no Firebase Cloud Functions host in bundle");
+
+for (const [name, id] of Object.entries(TANSTACK_SERVER_FUNCTION_IDS)) {
+  if (!bundledJs.includes(id)) {
+    fail(`server function ID missing for ${name}`);
+  }
+}
+ok(`all ${Object.keys(TANSTACK_SERVER_FUNCTION_IDS).length} server-function IDs present`);
 
 console.log("[verify-static-build] all checks passed");

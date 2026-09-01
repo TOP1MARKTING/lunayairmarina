@@ -36,7 +36,8 @@ export const FIREBASE_FUNCTION_NAMES: Record<ApiOperation, string> = {
 
 /**
  * TanStack Start server function IDs on the production Vercel host (content hashes).
- * Sourced from scripts/prod-smoke-firebase.ts and probe scripts; re-verify after major upgrades.
+ * Must match the latest `npm run build` SSR client bundle (.output/public/assets).
+ * Verified automatically by scripts/verify-server-fn-ids.ts during build:static.
  */
 export const TANSTACK_SERVER_FUNCTION_IDS: Record<ApiOperation, string> = {
   chatbotSendMessage: "8c3a24bfc2c03a6dbfec2ea9285c2a0884d1f92e8df4a37e1e4d4d4fd0e5b57a",

@@ -37,6 +37,7 @@
     "verify:agent": "tsx scripts/verify-agent-retrieval.ts",
     "typecheck": "tsc --noEmit",
     "build:static": "tsx scripts/build-static.ts",
+    "verify:serverfn-ids": "tsx scripts/verify-server-fn-ids.ts",
     "functions:build": "npm run build --prefix functions",
     "functions:typecheck": "npm run typecheck --prefix functions",
     "scan:secrets": "tsx scripts/scan-git-secrets.ts",
