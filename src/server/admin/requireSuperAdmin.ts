@@ -3,7 +3,12 @@ import { getAdminFirestore, getFirebaseAdminApp } from "@/server/agent/firebaseA
 export async function requireSuperAdminFromToken(idToken: string): Promise<string> {
   const { getAuth } = await import("firebase-admin/auth");
   const auth = getAuth(await getFirebaseAdminApp());
-  const decoded = await auth.verifyIdToken(idToken);
+  let decoded;
+  try {
+    decoded = await auth.verifyIdToken(idToken);
+  } catch {
+    throw new Error("UNAUTHORIZED");
+  }
   const db = await getAdminFirestore();
   const snap = await db.collection("admins").doc(decoded.uid).get();
   if (!snap.exists) throw new Error("FORBIDDEN");

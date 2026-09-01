@@ -38,7 +38,7 @@ import { createAiLeadAdmin, updateAiLeadAdmin } from "@/server/agent/leadsStoreA
 import { maybeRunPendingKnowledgeSync } from "@/server/agent/knowledgeSync";
 import { tryGetAdminFirestore } from "@/server/agent/firebaseAdmin";
 import { logAiUsage } from "@/server/agent/usageLog";
-import { getDb } from "@/lib/firebase";
+import { getClientFirestoreFallback } from "@/server/agent/clientFirestore";
 import type { AiConversationRecord } from "@/lib/agent/types";
 import { getChatbotConfig } from "./config";
 import { resolveConversationHistory } from "./conversationHistory";
@@ -137,7 +137,7 @@ export function validateChatRequest(
 async function loadExistingConversation(sessionId: string): Promise<AiConversationRecord | null> {
   const adminDb = await tryGetAdminFirestore();
   if (adminDb) return loadConversationAdmin(adminDb, sessionId);
-  return loadConversation(getDb(), sessionId);
+  return loadConversation(getClientFirestoreFallback(), sessionId);
 }
 
 async function persistConversationTurn(input: {
@@ -210,7 +210,7 @@ async function persistConversationTurn(input: {
     delete clientRecord.visitorName;
     delete clientRecord.visitorPhone;
     delete clientRecord.visitorEmail;
-    const db = getDb();
+    const db = getClientFirestoreFallback();
     await saveConversation(db, clientRecord);
     await appendConversationMessage(db, input.sessionId, userMsg);
     await appendConversationMessage(db, input.sessionId, assistantMsg);
@@ -569,7 +569,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
         const adminDb = await tryGetAdminFirestore();
         if (leadId) {
           if (adminDb) await updateAiLeadAdmin(adminDb, leadId, leadPatch);
-          else await updateAiLeadClient(getDb(), leadId, leadPatch);
+          else await updateAiLeadClient(getClientFirestoreFallback(), leadId, leadPatch);
         } else if (lead.shouldCreateLead || hasVisitorContact(customerContext)) {
           const record = buildAiLeadRecord({
             conversationId: validated.data.sessionId,
@@ -579,7 +579,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
             name: lead.name ?? customerContext.name,
           });
           if (adminDb) await createAiLeadAdmin(adminDb, record);
-          else await createAiLeadClient(getDb(), record);
+          else await createAiLeadClient(getClientFirestoreFallback(), record);
           leadId = record.id;
           logAiUsage({
             event: "lead_created",
@@ -637,7 +637,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
               createdAt: new Date().toISOString(),
             });
         } else {
-          await createKnowledgeCandidate(getDb(), {
+          await createKnowledgeCandidate(getClientFirestoreFallback(), {
             question: validated.data.message,
             language: validated.data.language,
             reason: "Low-confidence or missing authoritative website knowledge",

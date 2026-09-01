@@ -24,7 +24,7 @@ import {
 } from "@/lib/agent/types";
 import { sortMessagesChronologically } from "@/lib/agent/messageOrder";
 import { readKnowledgeSyncStatusClient } from "@/lib/agent/knowledgeSyncClient";
-import { triggerKnowledgeSync, deleteAiConversation, deleteAllAiConversations } from "@/functions/aiAdmin";
+import { triggerKnowledgeSync, deleteAiConversation, deleteAllAiConversations } from "@/lib/api/aiAdmin";
 import { cn } from "@/lib/utils";
 
 export const Route = createLazyFileRoute("/admin/ai")({

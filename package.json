@@ -35,7 +35,14 @@
     "test:contact-attribution": "tsx scripts/test-contact-attribution.ts",
     "test:agent:live": "tsx scripts/test-agent-live.ts",
     "verify:agent": "tsx scripts/verify-agent-retrieval.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:static": "tsx scripts/build-static.ts",
+    "functions:build": "npm run build --prefix functions",
+    "functions:typecheck": "npm run typecheck --prefix functions",
+    "scan:secrets": "tsx scripts/scan-git-secrets.ts",
+    "test:functions": "tsx scripts/test-firebase-functions.ts",
+    "test:functions:auth": "node scripts/test-firebase-functions-auth.mjs",
+    "emulators:start": "node scripts/start-functions-emulator.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

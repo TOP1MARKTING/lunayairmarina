@@ -2,7 +2,7 @@ import type { Firestore } from "firebase-admin/firestore";
 import enLocale from "@/locales/en.json";
 import arLocale from "@/locales/ar.json";
 import { companyInfo } from "@/data/companyInfo";
-import { DEFAULT_BLOG_POSTS, type BlogPost } from "@/data/blog";
+import { DEFAULT_BLOG_POSTS, type BlogPost } from "@/data/blogCore";
 import { SERVICE_SLUGS } from "@/data/serviceSlugs";
 import type {
   AboutContent,

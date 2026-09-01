@@ -12,7 +12,7 @@ import {
 import type { CustomerContext } from "@/lib/agent/context";
 import { getKnowledgeForLanguage } from "@/server/chatbot/knowledge";
 import type { QuestionFocus } from "@/server/chatbot/agent/factSelection";
-import { getDb } from "@/lib/firebase";
+import { getClientFirestoreFallback } from "@/server/agent/clientFirestore";
 import { tryGetAdminFirestore } from "./firebaseAdmin";
 import { estimateTokens, truncateToTokenBudget } from "./normalize";
 import { loadAllKnowledgeDocuments } from "./knowledgeStore";
@@ -381,7 +381,7 @@ async function loadFirestoreDocuments(): Promise<KnowledgeDocument[]> {
   }
 
   try {
-    const docs = await loadAllKnowledgeDocuments(getDb());
+    const docs = await loadAllKnowledgeDocuments(getClientFirestoreFallback());
     cachedFirestoreDocuments = docs;
     firestoreCacheLoadedAt = now;
     lastKnowledgeSource = "firestore-client";

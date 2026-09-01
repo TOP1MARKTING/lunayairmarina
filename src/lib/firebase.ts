@@ -2,75 +2,31 @@ import { initializeApp, getApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 import { getAuth, type Auth } from "firebase/auth";
+import {
+  hasCompleteFirebaseWebEnv,
+  resolveFirebaseWebConfig,
+  type FirebaseWebConfig,
+} from "./firebaseConfig";
 
 /**
  * Firebase Web SDK config is public by design (security is Firestore/Auth rules).
  * Prefer VITE_* env on Vercel/local; fall back so SSR does not 500 when env is unset.
  */
-const PUBLIC_WEB_FALLBACK = {
-  apiKey: "AIzaSyA6rTHWzaQJVPxI9hyViPIv3g0R6d7f6O8",
-  authDomain: "lunayairmarina-2d694.firebaseapp.com",
-  projectId: "lunayairmarina-2d694",
-  storageBucket: "lunayairmarina-2d694.firebasestorage.app",
-  messagingSenderId: "640687266007",
-  appId: "1:640687266007:web:3effccbfa5897130277892",
-  measurementId: "G-VB6Y6RRZFL",
-} as const;
-
-type FirebaseWebConfig = {
-  apiKey: string;
-  authDomain: string;
-  projectId: string;
-  storageBucket: string;
-  messagingSenderId: string;
-  appId: string;
-  measurementId?: string;
-};
-
-function readEnv(name: string): string | undefined {
+function readViteEnv(name: string): string | undefined {
   const value = (import.meta.env as Record<string, string | undefined>)[name];
   if (typeof value === "string" && value.trim()) return value.trim();
+  const fromProcess = process.env[name];
+  if (typeof fromProcess === "string" && fromProcess.trim()) return fromProcess.trim();
   return undefined;
 }
 
 function resolveFirebaseConfig(): FirebaseWebConfig {
-  const fromEnv = {
-    apiKey: readEnv("VITE_FIREBASE_API_KEY"),
-    authDomain: readEnv("VITE_FIREBASE_AUTH_DOMAIN"),
-    projectId: readEnv("VITE_FIREBASE_PROJECT_ID"),
-    storageBucket: readEnv("VITE_FIREBASE_STORAGE_BUCKET"),
-    messagingSenderId: readEnv("VITE_FIREBASE_MESSAGING_SENDER_ID"),
-    appId: readEnv("VITE_FIREBASE_APP_ID"),
-    measurementId: readEnv("VITE_FIREBASE_MEASUREMENT_ID"),
-  };
-
-  const requiredOk =
-    fromEnv.apiKey &&
-    fromEnv.authDomain &&
-    fromEnv.projectId &&
-    fromEnv.storageBucket &&
-    fromEnv.messagingSenderId &&
-    fromEnv.appId;
-
-  if (requiredOk) {
-    return {
-      apiKey: fromEnv.apiKey!,
-      authDomain: fromEnv.authDomain!,
-      projectId: fromEnv.projectId!,
-      storageBucket: fromEnv.storageBucket!,
-      messagingSenderId: fromEnv.messagingSenderId!,
-      appId: fromEnv.appId!,
-      measurementId: fromEnv.measurementId,
-    };
-  }
-
-  if (import.meta.env.PROD) {
+  if (!hasCompleteFirebaseWebEnv(readViteEnv) && import.meta.env.PROD) {
     console.warn(
       "[firebase] VITE_FIREBASE_* env incomplete — using public web config fallback. Set env vars in Vercel for clarity.",
     );
   }
-
-  return { ...PUBLIC_WEB_FALLBACK };
+  return resolveFirebaseWebConfig(readViteEnv);
 }
 
 let resolvedConfig: FirebaseWebConfig | undefined;
@@ -139,3 +95,5 @@ export const firebaseConfig = new Proxy({} as FirebaseWebConfig, {
     return Reflect.get(getFirebaseConfig(), prop);
   },
 });
+
+export type { FirebaseWebConfig } from "./firebaseConfig";

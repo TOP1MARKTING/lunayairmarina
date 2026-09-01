@@ -1,6 +1,6 @@
 import type { ChatHistoryItem } from "@/lib/chatbot/types";
 import type { AiMessageRecord } from "@/lib/agent/types";
-import { getDb } from "@/lib/firebase";
+import { getClientFirestoreFallback } from "@/server/agent/clientFirestore";
 import { listConversationMessages } from "@/server/agent/conversationStore";
 import { listConversationMessagesAdmin } from "@/server/agent/conversationStoreAdmin";
 import { tryGetAdminFirestore } from "@/server/agent/firebaseAdmin";
@@ -31,7 +31,7 @@ export async function resolveConversationHistory(
       if (fromAdmin.length > 0) return { history: fromAdmin, source: "firestore" };
     }
 
-    const clientMessages = await listConversationMessages(getDb(), sessionId);
+    const clientMessages = await listConversationMessages(getClientFirestoreFallback(), sessionId);
     const fromClient = messagesToHistory(clientMessages);
     if (fromClient.length > 0) return { history: fromClient, source: "firestore" };
   } catch {

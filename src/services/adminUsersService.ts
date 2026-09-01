@@ -26,7 +26,7 @@ import {
   type AdminRoleId,
   type AdminUser,
 } from "@/lib/admin-roles";
-import { setAdminUserPassword } from "@/functions/adminUsers";
+import { setAdminUserPassword } from "@/lib/api/adminUsers";
 
 const ADMINS_COLLECTION = "admins";
 const PRIVATE_COLLECTION = "private";

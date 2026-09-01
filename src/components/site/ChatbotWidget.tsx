@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Bot, Loader2, SendHorizontal, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
-import { sendChatbotMessage, submitChatbotContact } from "@/functions/chatbot";
+import { sendChatbotMessage, submitChatbotContact } from "@/lib/api/chatbot";
 import { useLanguage } from "@/lib/i18n";
 import type { ChatErrorCode } from "@/lib/chatbot/types";
 import {

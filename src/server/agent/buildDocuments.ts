@@ -1,4 +1,4 @@
-import type { BlogPost } from "@/data/blog";
+import type { BlogPost } from "@/data/blogCore";
 import { SERVICE_SLUGS } from "@/data/serviceSlugs";
 import {
   KNOWLEDGE_SCHEMA_VERSION,
