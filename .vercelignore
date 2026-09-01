@@ -1,0 +1,6 @@
+dist
+dist-ssr
+.output
+lunayairmarina-cpanel.zip
+*.zip
+functions/node_modules

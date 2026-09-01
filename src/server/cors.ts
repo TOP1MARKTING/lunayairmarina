@@ -3,27 +3,9 @@
  * Origins are explicit — never use `*`.
  */
 
-const DEFAULT_ALLOWED_ORIGINS = [
-  "https://www.lunayairmarina.com",
-  "https://lunayairmarina.com",
-  "http://localhost:8080",
-  "http://127.0.0.1:8080",
-  "http://localhost:4173",
-  "http://127.0.0.1:4173",
-  "http://localhost:5000",
-  "http://127.0.0.1:5000",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-] as const;
+import { getTrustedOrigins, isTrustedOrigin } from "@/lib/trustedOrigins";
 
-/** Merge defaults with ALLOWED_CORS_ORIGINS (comma-separated, server env only). */
-export function getAllowedCorsOrigins(): string[] {
-  const extra = (process.env.ALLOWED_CORS_ORIGINS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...extra])];
-}
+export { getTrustedOrigins as getAllowedCorsOrigins, isTrustedOrigin };
 
 export function isServerFnPath(pathname: string): boolean {
   return pathname.startsWith("/_serverFn/");
@@ -32,7 +14,7 @@ export function isServerFnPath(pathname: string): boolean {
 export function resolveCorsOrigin(request: Request): string | null {
   const origin = request.headers.get("Origin")?.trim();
   if (!origin) return null;
-  return getAllowedCorsOrigins().includes(origin) ? origin : null;
+  return isTrustedOrigin(origin) ? origin : null;
 }
 
 export function applyCorsHeaders(request: Request, response: Response): Response {

@@ -1,5 +1,7 @@
 /** Server-only chatbot configuration. Never import from client components. */
 
+import { readServerEnv } from "@/server/env";
+
 export const CHATBOT_DEFAULTS = {
   maxMessageLength: 1000,
   /** Recent messages sent to Gemini (not a user-facing conversation cap). */
@@ -22,7 +24,7 @@ export const CHATBOT_DEFAULTS = {
 } as const;
 
 function readFloat(name: string, fallback: number, min: number, max: number): number {
-  const raw = process.env[name];
+  const raw = readServerEnv(name);
   if (!raw) return fallback;
   const parsed = Number.parseFloat(raw);
   if (!Number.isFinite(parsed)) return fallback;
@@ -30,7 +32,7 @@ function readFloat(name: string, fallback: number, min: number, max: number): nu
 }
 
 function readInt(name: string, fallback: number, min: number, max: number): number {
-  const raw = process.env[name];
+  const raw = readServerEnv(name);
   if (!raw) return fallback;
   const parsed = Number.parseInt(raw, 10);
   if (!Number.isFinite(parsed)) return fallback;
@@ -39,8 +41,8 @@ function readInt(name: string, fallback: number, min: number, max: number): numb
 
 export function getChatbotConfig() {
   return {
-    geminiApiKey: process.env.GEMINI_API_KEY?.trim() ?? "",
-    geminiModel: process.env.GEMINI_MODEL?.trim() || CHATBOT_DEFAULTS.geminiModel,
+    geminiApiKey: readServerEnv("GEMINI_API_KEY"),
+    geminiModel: readServerEnv("GEMINI_MODEL") || CHATBOT_DEFAULTS.geminiModel,
     maxMessageLength: readInt(
       "CHATBOT_MAX_MESSAGE_LENGTH",
       CHATBOT_DEFAULTS.maxMessageLength,
