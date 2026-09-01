@@ -42,6 +42,7 @@
     "scan:secrets": "tsx scripts/scan-git-secrets.ts",
     "test:functions": "tsx scripts/test-firebase-functions.ts",
     "test:functions:auth": "node scripts/test-firebase-functions-auth.mjs",
+    "test:serverfn:auth": "tsx scripts/test-server-fn-auth.ts",
     "emulators:start": "node scripts/start-functions-emulator.mjs"
   },
   "dependencies": {
