@@ -1,7 +1,14 @@
 import { callServerApi } from "./client";
 import { API_OPERATIONS } from "./endpoints";
-import { mergeAdminAuthHeaders } from "./authHeaders";
+import { getAdminIdToken } from "./authHeaders";
 import { unwrapServerFnArgs } from "./unwrap";
+
+/**
+ * Admin identity travels in the body as well as the Bearer header: the
+ * server-fn transport has no header channel, while Cloud Functions read the
+ * header and ignore the extra field.
+ */
+type AdminTokenPayload = { idToken: string };
 
 export type DeleteConversationPayload = {
   sessionId: string;
@@ -21,10 +28,10 @@ export type KnowledgeSyncResult = {
 };
 
 export async function aiTriggerKnowledgeSync(): Promise<KnowledgeSyncResult> {
-  const headers = await mergeAdminAuthHeaders();
-  return callServerApi<Record<string, never>, KnowledgeSyncResult>(
+  const idToken = await getAdminIdToken();
+  return callServerApi<AdminTokenPayload, KnowledgeSyncResult>(
     API_OPERATIONS.aiTriggerKnowledgeSync,
-    { data: {}, headers },
+    { data: { idToken }, headers: { Authorization: `Bearer ${idToken}` } },
   );
 }
 
@@ -32,18 +39,18 @@ export async function aiDeleteConversation(
   input: DeleteConversationPayload | { data: DeleteConversationPayload },
 ): Promise<DeleteConversationResult> {
   const payload = unwrapServerFnArgs(input);
-  const headers = await mergeAdminAuthHeaders();
-  return callServerApi<DeleteConversationPayload, DeleteConversationResult>(
+  const idToken = await getAdminIdToken();
+  return callServerApi<AdminTokenPayload & DeleteConversationPayload, DeleteConversationResult>(
     API_OPERATIONS.aiDeleteConversation,
-    { data: payload, headers },
+    { data: { ...payload, idToken }, headers: { Authorization: `Bearer ${idToken}` } },
   );
 }
 
 export async function aiDeleteAllConversations(): Promise<DeleteAllConversationsResult> {
-  const headers = await mergeAdminAuthHeaders();
-  return callServerApi<Record<string, never>, DeleteAllConversationsResult>(
+  const idToken = await getAdminIdToken();
+  return callServerApi<AdminTokenPayload, DeleteAllConversationsResult>(
     API_OPERATIONS.aiDeleteAllConversations,
-    { data: {}, headers },
+    { data: { idToken }, headers: { Authorization: `Bearer ${idToken}` } },
   );
 }
 

@@ -63,7 +63,7 @@ async function callLocalServerFn<TData, TResult>(
     }
     case "aiTriggerKnowledgeSync": {
       const { triggerKnowledgeSync } = await import("@/functions/aiAdmin");
-      return triggerKnowledgeSync() as Promise<TResult>;
+      return triggerKnowledgeSync({ data: args.data }) as Promise<TResult>;
     }
     case "aiDeleteConversation": {
       const { deleteAiConversation } = await import("@/functions/aiAdmin");
@@ -71,7 +71,7 @@ async function callLocalServerFn<TData, TResult>(
     }
     case "aiDeleteAllConversations": {
       const { deleteAllAiConversations } = await import("@/functions/aiAdmin");
-      return deleteAllAiConversations() as Promise<TResult>;
+      return deleteAllAiConversations({ data: args.data }) as Promise<TResult>;
     }
     case "adminSetUserPassword": {
       const { setAdminUserPassword } = await import("@/functions/adminUsers");
