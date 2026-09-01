@@ -26,6 +26,13 @@ console.log("[build:static] VITE_FUNCTIONS_BASE_URL=", process.env.VITE_FUNCTION
 console.log("[build:static] VITE_API_BASE_URL=", process.env.VITE_API_BASE_URL);
 console.log("[build:static] VITE_SITE_URL=", process.env.VITE_SITE_URL);
 
+if (process.env.VITE_API_TRANSPORT === "http") {
+  console.warn(
+    "[build:static] WARNING: http transport requires deployed Firebase Cloud Functions " +
+      "(Blaze plan). On the Spark plan use the Vercel SSR build (npm run build) instead.",
+  );
+}
+
 execSync("tsx scripts/generateSitemap.ts", { cwd: root, stdio: "inherit" });
 execSync("vite build --config vite.config.static.ts", { cwd: root, stdio: "inherit" });
 execSync("tsx scripts/finalize-static-dist.ts", { cwd: root, stdio: "inherit" });

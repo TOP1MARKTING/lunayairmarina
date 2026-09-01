@@ -3,9 +3,14 @@ import { FIREBASE_FUNCTION_NAMES, HTTP_API_PATHS } from "./endpoints";
 
 export type ApiTransport = "http" | "server-fn";
 
+/**
+ * Defaults to `server-fn` so SSR deployments (Vercel) call TanStack server
+ * functions. Only the static-hosting build opts into `http`, which requires
+ * deployed Firebase Cloud Functions.
+ */
 export function getApiTransport(): ApiTransport {
   const raw = (import.meta.env.VITE_API_TRANSPORT as string | undefined)?.trim();
-  return raw === "server-fn" ? "server-fn" : "http";
+  return raw === "http" ? "http" : "server-fn";
 }
 
 export function isStaticHostingBuild(): boolean {
