@@ -23,6 +23,9 @@ secrets/
 *service-account*.json
 *-firebase-adminsdk-*.json
 
+# Points at the temp service-account file; written by prepare-vercel-firebase-env.ts
+scripts/.last-vercel-sa-temp
+
 # Local image source packs (import scripts consume these)
 public/images/New folder/
 
