@@ -19,7 +19,7 @@ import {
 } from "../src/server/agent/usageLog";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { ensureAssistantReply } from "../src/server/chatbot/geminiFallback";
 import { processChatMessage } from "../src/server/chatbot/chat";
 import {
@@ -86,13 +86,13 @@ function isQuota(e: unknown): boolean {
   const m = e instanceof Error ? e.message : String(e);
   return (
     /429|quota|RESOURCE_EXHAUSTED|rate limit/i.test(m) ||
-    (e instanceof GeminiServiceError && e.kind === "quota")
+    (e instanceof OpenAIServiceError && e.kind === "quota")
   );
 }
 
 function isNetwork(e: unknown): boolean {
   return (
-    e instanceof GeminiServiceError &&
+    e instanceof OpenAIServiceError &&
     (e.kind === "network" || e.kind === "timeout")
   );
 }
@@ -125,7 +125,7 @@ async function delay() {
 }
 
 async function runTurn(msg: string, lang: "ar" | "en", hist: ChatHistoryItem[], ctx: CustomerContext) {
-  if (quotaBlocked) throw new GeminiServiceError("quota blocked", { retryable: false, kind: "quota" });
+  if (quotaBlocked) throw new OpenAIServiceError("quota blocked", { retryable: false, kind: "quota" });
   geminiCalls += 1;
   const a = analyzeAgentTurn(msg, lang, ctx);
   let c = a.context;
@@ -249,17 +249,17 @@ console.log("Phase 5.9 — Final Production Certification Closure\n");
 console.log("=== 1. AUDIT + DETERMINISTIC GATE ===\n");
 
 const chatTs = readFileSync(join(process.cwd(), "src/server/chatbot/chat.ts"), "utf8");
-const geminiTs = readFileSync(join(process.cwd(), "src/server/chatbot/gemini.ts"), "utf8");
+const openaiTs = readFileSync(join(process.cwd(), "src/server/chatbot/openai.ts"), "utf8");
 det(/generateAgentTurn/.test(chatTs), "chat.ts uses generateAgentTurn");
 det(!/generateStaticReply/.test(chatTs), "no generateStaticReply");
-det(!/openai|OpenAI/.test(chatTs), "no OpenAI in chat.ts");
-det(/sanitizeContextForGemini/.test(chatTs), "sanitized Gemini context");
+det(/OpenAIServiceError|from "\.\/openai"/.test(chatTs), "chat.ts uses OpenAI");
+det(/sanitizeContextForGemini/.test(chatTs), "sanitized LLM context");
 det(/persistConversationTurn/.test(chatTs) && /Conversation persistence must not break/.test(chatTs), "persist non-blocking");
-det(!/GEMINI_API_KEY/.test(geminiTs) || /config\.geminiApiKey/.test(geminiTs), "gemini key server-side only");
+det(!/OPENAI_API_KEY/.test(openaiTs) || /config\.openaiApiKey/.test(openaiTs), "OpenAI key server-side only");
 
 for (const f of ["src/components/site/ChatbotWidget.tsx", "src/lib/chatbot/session.ts", "src/lib/chatbot/types.ts"]) {
   const c = readFileSync(join(process.cwd(), f), "utf8");
-  det(!/GEMINI_API_KEY|generativelanguage\.googleapis/.test(c), `client safe: ${f}`);
+  det(!/OPENAI_API_KEY|api\.openai\.com/.test(c), `client safe: ${f}`);
 }
 
 // partial context must not crash prompt builder
@@ -372,8 +372,8 @@ if (detFail > 0) {
 
 // === GEMINI PROBE ===
 const cfg = getChatbotConfig();
-if (!cfg.geminiApiKey) {
-  console.log("CERTIFICATION BLOCKED — NO GEMINI_API_KEY\n");
+if (!cfg.openaiApiKey) {
+  console.log("CERTIFICATION BLOCKED — NO OPENAI_API_KEY\n");
   quotaBlocked = true;
 } else {
   console.log("=== GEMINI PROBE ===\n");
@@ -560,7 +560,7 @@ if (!quotaBlocked) {
 }
 
 // J — Failure recovery (429 simulation deterministic)
-det(isQuota(new GeminiServiceError("429 quota", { retryable: true, kind: "quota" })), "429 classified as quota");
+det(isQuota(new OpenAIServiceError("429 quota", { retryable: true, kind: "quota" })), "429 classified as quota");
 const failedParse = parseGeminiAgentOutputDetailed(null);
 det(failedParse.status === "failed", "null parse → failed");
 det(ensureAssistantReply(failedParse.reply, "ar", "empty").trim().length > 0, "failed parse still returns reply");
@@ -571,7 +571,7 @@ log({
   id: "gemini-only-runtime",
   group: "K",
   critical: true,
-  status: !/generateStaticReply/.test(chatTs) && !/openai/i.test(chatTs) ? "PASS" : "FAIL",
+  status: !/generateStaticReply/.test(chatTs) && /openai/i.test(chatTs) ? "PASS" : "FAIL",
   evidence: "Gemini-only, server-side key, no Static/OpenAI",
 });
 

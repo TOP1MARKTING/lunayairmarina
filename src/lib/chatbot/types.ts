@@ -26,6 +26,7 @@ export interface ChatRequest {
 export type ChatErrorCode =
   | "VALIDATION"
   | "RATE_LIMIT"
+  | "AI"
   | "GEMINI"
   | "FIRESTORE"
   | "CONTEXT"

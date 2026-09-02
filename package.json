@@ -29,7 +29,7 @@
     "test:context-isolation": "tsx scripts/test-context-isolation.ts",
     "test:json-reliability": "tsx scripts/test-json-reliability.ts",
     "test:quality-guards": "tsx scripts/test-quality-guards.ts",
-    "test:gemini-runtime": "tsx scripts/test-gemini-runtime.ts",
+    "test:openai-runtime": "tsx scripts/test-gemini-runtime.ts",
     "test:response-variation": "tsx scripts/test-response-variation.ts",
     "test:fact-selection": "tsx scripts/test-fact-selection.ts",
     "test:contact-attribution": "tsx scripts/test-contact-attribution.ts",

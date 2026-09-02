@@ -12,16 +12,16 @@ export function estimateHistoryTokens(history: ChatHistoryItem[]): number {
 }
 
 /**
- * Select recent turns for Gemini only. Full client history remains unlimited for
+ * Select recent turns for the LLM only. Full client history remains unlimited for
  * validation and Firestore persistence; older context is covered via conversation summary.
  */
-export function prepareGeminiHistory(
+export function prepareLlmHistory(
   history: ChatHistoryItem[],
   config: ChatbotConfig,
 ): ChatHistoryItem[] {
-  let selected = trimHistory(history, config.geminiMaxHistoryItems);
+  let selected = trimHistory(history, config.llmMaxHistoryItems);
 
-  const budget = config.geminiHistoryTokenBudget;
+  const budget = config.llmHistoryTokenBudget;
   if (budget <= 0 || selected.length <= 2) return selected;
 
   while (selected.length > 2 && estimateHistoryTokens(selected) > budget) {
@@ -31,13 +31,19 @@ export function prepareGeminiHistory(
   return selected;
 }
 
+/** @deprecated Use prepareLlmHistory */
+export const prepareGeminiHistory = prepareLlmHistory;
+
 /**
- * Emergency trim when Gemini rejects context size — keeps at least one prior turn.
+ * Emergency trim when the LLM rejects context size — keeps at least one prior turn.
  */
-export function shrinkGeminiHistoryForRetry(history: ChatHistoryItem[]): ChatHistoryItem[] {
+export function shrinkLlmHistoryForRetry(history: ChatHistoryItem[]): ChatHistoryItem[] {
   if (history.length <= 4) {
     return history.slice(-Math.max(1, history.length - 1));
   }
   const half = Math.max(2, Math.floor(history.length / 2));
   return history.slice(-half);
 }
+
+/** @deprecated Use shrinkLlmHistoryForRetry */
+export const shrinkGeminiHistoryForRetry = shrinkLlmHistoryForRetry;

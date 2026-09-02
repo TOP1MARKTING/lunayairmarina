@@ -15,7 +15,7 @@ import {
   type CustomerContext,
 } from "../src/lib/agent/context";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateChatReply, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateChatReply, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { getGeminiFallbackReply } from "../src/server/chatbot/geminiFallback";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { prepareGeminiHistory } from "../src/server/chatbot/contextManagement";
@@ -79,7 +79,7 @@ async function turn(
   } catch (error) {
     const messageText = error instanceof Error ? error.message : String(error);
     const quota =
-      (error instanceof GeminiServiceError && error.kind === "quota") ||
+      (error instanceof OpenAIServiceError && error.kind === "quota") ||
       /quota|429|rate-limit|rate limit/i.test(messageText);
     if (quota) return { reply: "", context: nextContext, summary: nextSummary, quota: true };
     throw error;
@@ -97,19 +97,19 @@ async function sleep(ms: number) {
 async function main() {
   const config = getChatbotConfig();
   console.log("\n=== PRODUCTION GEMINI AUDIT ===\n");
-  console.log(`Configured model: ${config.geminiModel}`);
+  console.log(`Configured model: ${config.openaiModel}`);
   console.log(`Default model: gemini-3.5-flash-lite`);
   console.log(`GEMINI_MODEL override: ${Boolean(process.env.GEMINI_MODEL)}`);
-  console.log(`API key present: ${Boolean(config.geminiApiKey)} (len=${config.geminiApiKey.length})`);
+  console.log(`API key present: ${Boolean(config.openaiApiKey)} (len=${config.openaiApiKey.length})`);
 
   record(
     "model-name",
-    config.geminiModel === "gemini-3.5-flash-lite" || Boolean(process.env.GEMINI_MODEL?.trim())
+    config.openaiModel === "gemini-3.5-flash-lite" || Boolean(process.env.GEMINI_MODEL?.trim())
       ? "PASS"
       : "FAIL",
-    config.geminiModel,
+    config.openaiModel,
   );
-  record("api-key-server-config", config.geminiApiKey !== undefined ? "PASS" : "FAIL");
+  record("api-key-server-config", config.openaiApiKey !== undefined ? "PASS" : "FAIL");
 
   const widget = readFileSync(resolve(root, "src/components/site/ChatbotWidget.tsx"), "utf8");
   record(
@@ -159,16 +159,16 @@ async function main() {
     lead.leadStatus,
   );
 
-  if (!config.geminiApiKey) {
+  if (!config.openaiApiKey) {
     record("live-model-probe", "SKIP", "GEMINI_API_KEY missing");
     printSummary();
     return;
   }
 
-  const probeUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`;
+  const probeUrl = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.openaiModel)}:generateContent`;
   const probe = await fetch(probeUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": config.geminiApiKey },
+    headers: { "Content-Type": "application/json", "x-goog-api-key": config.openaiApiKey },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: "ping" }] }],
       generationConfig: { maxOutputTokens: 8 },
@@ -178,7 +178,7 @@ async function main() {
   if (probe.status === 429 || /quota/i.test(probeBody)) {
     record("live-model-probe", "SKIP", `HTTP ${probe.status} quota`);
   } else if (probe.ok) {
-    record("live-model-probe", "PASS", `HTTP ${probe.status} model=${config.geminiModel}`);
+    record("live-model-probe", "PASS", `HTTP ${probe.status} model=${config.openaiModel}`);
   } else {
     record(
       "live-model-probe",

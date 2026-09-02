@@ -10,7 +10,7 @@ import type { ChatHistoryItem } from "../src/lib/chatbot/types";
 import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import {
   analyzeAgentTurn,
   buildAgentStateBlock,
@@ -33,7 +33,7 @@ let skipNetwork = 0;
 function isQuota(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   return /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ||
-    (error instanceof GeminiServiceError && error.kind === "quota");
+    (error instanceof OpenAIServiceError && error.kind === "quota");
 }
 
 async function runTurn(
@@ -105,7 +105,7 @@ async function runScenario(
       await new Promise((r) => setTimeout(r, 900));
     } catch (error) {
       if (isQuota(error)) return { ok: null, reason: "QUOTA" };
-      if (error instanceof GeminiServiceError && error.kind === "network") return { ok: null, reason: "NETWORK" };
+      if (error instanceof OpenAIServiceError && error.kind === "network") return { ok: null, reason: "NETWORK" };
       return { ok: false, reason: error instanceof Error ? error.message : String(error) };
     }
   }
@@ -114,8 +114,8 @@ async function runScenario(
 
 console.log("Phase 5.4 live validation\n");
 const config = getChatbotConfig();
-if (!config.geminiApiKey) {
-  console.log("SKIP — no GEMINI_API_KEY\n");
+if (!config.openaiApiKey) {
+  console.log("SKIP — NO OPENAI_API_KEY\n");
   process.exit(0);
 }
 

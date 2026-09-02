@@ -13,8 +13,9 @@ function escapeRegexHost(host: string): string {
   return host.replace(/\./g, "\\.");
 }
 
-function generateHtaccess(siteUrl: string): string {
+function generateHtaccess(siteUrl: string, apiOrigin: string): string {
   const canonical = siteUrl.replace(/\/$/, "");
+  const vercelApi = apiOrigin.replace(/\/$/, "");
   let hostname: string;
   try {
     hostname = new URL(canonical).hostname;
@@ -44,6 +45,10 @@ function generateHtaccess(siteUrl: string): string {
   RewriteCond %{HTTP_HOST} !^127\\.0\\.0\\.1(:\\d+)?$ [NC]
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 ${apexToWwwRule}
+
+  # --- Proxy TanStack server functions to Vercel (browser keeps ${canonical}/_serverFn/...) ---
+  RewriteCond %{REQUEST_URI} ^/_serverFn/ [NC]
+  RewriteRule ^ ${vercelApi}%{REQUEST_URI} [P,L]
 
   # --- SPA fallback: serve real files/directories first ---
   RewriteCond %{REQUEST_FILENAME} !-f
@@ -76,14 +81,18 @@ function main() {
     process.env.VITE_SITE_URL?.trim() ||
     process.env.SITE_URL?.trim() ||
     "https://www.lunayairmarina.com";
+  const apiOrigin =
+    process.env.VITE_VERCEL_API_ORIGIN?.trim() ||
+    process.env.VITE_API_BASE_URL?.trim() ||
+    "https://lunayairmarina.vercel.app";
 
   if (!existsSync(dist)) {
     mkdirSync(dist, { recursive: true });
   }
 
   const outPath = resolve(dist, ".htaccess");
-  writeFileSync(outPath, generateHtaccess(siteUrl), "utf8");
-  console.log(`[generate-htaccess] wrote ${outPath} for ${siteUrl.replace(/\/$/, "")}`);
+  writeFileSync(outPath, generateHtaccess(siteUrl, apiOrigin), "utf8");
+  console.log(`[generate-htaccess] wrote ${outPath} for ${siteUrl.replace(/\/$/, "")} → ${apiOrigin}`);
 }
 
 main();

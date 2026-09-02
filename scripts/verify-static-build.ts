@@ -68,7 +68,7 @@ for (const routePath of listStaticPrerenderPaths()) {
   ok(`prerender route ${routePath}`);
 }
 
-const forbiddenSnippets = ["GEMINI_API_KEY", "FIREBASE_SERVICE_ACCOUNT_JSON", "private_key"];
+const forbiddenSnippets = ["OPENAI_API_KEY", "GEMINI_API_KEY", "FIREBASE_SERVICE_ACCOUNT_JSON", "private_key"];
 const sampleBundles = assetFiles
   .filter((name) => name.endsWith(".js"))
   .slice(0, 8)

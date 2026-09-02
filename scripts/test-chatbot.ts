@@ -33,7 +33,7 @@ import {
   updateConversationSummary,
 } from "../src/lib/agent/context";
 import { getKnowledgeForLanguage } from "../src/server/chatbot/knowledge";
-import { extractGeminiText } from "../src/server/chatbot/gemini";
+import { extractOpenAIResponseText } from "../src/server/chatbot/openai";
 import {
   ensureAssistantReply,
   GEMINI_UNCLEAR_REPLY,
@@ -118,7 +118,7 @@ const oversizedValidated = validateChatRequest({
 assert(oversizedValidated.ok === true, "oversized legacy client history items do not fail validation");
 
 const geminiSlice = prepareGeminiHistory(longHistory, getChatbotConfig());
-assert(geminiSlice.length <= getChatbotConfig().geminiMaxHistoryItems, "gemini history internally capped");
+assert(geminiSlice.length <= getChatbotConfig().llmMaxHistoryItems, "llm history internally capped");
 
 const centuryHistory = Array.from({ length: 200 }, (_, index) => ({
   role: index % 2 === 0 ? "user" : "assistant",
@@ -132,7 +132,7 @@ const centuryValidated = validateChatRequest({
 assert(centuryValidated.ok === true, "200-item history validates without rejection");
 assert(
   prepareGeminiHistory(centuryHistory, getChatbotConfig()).length <=
-    getChatbotConfig().geminiMaxHistoryItems,
+    getChatbotConfig().llmMaxHistoryItems,
   "200-item history trims for gemini only",
 );
 
@@ -183,7 +183,7 @@ for (const count of [10, 50, 100, 200, 500, 1000]) {
   const prepared = prepareGeminiHistory(thread, getChatbotConfig());
   assert(prepared.length >= 2, `prepareGeminiHistory keeps turns for count=${count}`);
   assert(
-    estimateHistoryTokens(prepared) <= getChatbotConfig().geminiHistoryTokenBudget + 500,
+    estimateHistoryTokens(prepared) <= getChatbotConfig().llmHistoryTokenBudget + 500,
     `token budget respected for count=${count}`,
   );
 }
@@ -495,10 +495,10 @@ for (const modulePath of clientModules) {
   const source = await import("node:fs/promises").then((fs) =>
     fs.readFile(new URL(modulePath, import.meta.url), "utf8"),
   );
-  assert(!source.includes("GEMINI_API_KEY"), `${modulePath} does not reference GEMINI_API_KEY`);
+  assert(!source.includes("OPENAI_API_KEY"), `${modulePath} does not reference OPENAI_API_KEY`);
   assert(
-    !source.includes("generativelanguage.googleapis.com"),
-    `${modulePath} does not call Gemini directly`,
+    !source.includes("api.openai.com"),
+    `${modulePath} does not call OpenAI directly`,
   );
   assert(!source.includes("dangerouslySetInnerHTML"), `${modulePath} avoids innerHTML`);
 }
@@ -645,34 +645,34 @@ const meterCtx = extractContextFromMessage("عندي يخت 45 متر في جد�
 assert(meterCtx.yachtLength?.includes("45"), "extracts yacht length in meters");
 assert(meterCtx.location === "جدة", "extracts Jeddah with meter-length yacht");
 
-assert(extractGeminiText(null) === null, "null Gemini payload is invalid");
-assert(extractGeminiText(undefined) === null, "undefined Gemini payload is invalid");
-assert(extractGeminiText({}) === null, "empty Gemini object is invalid");
+assert(extractOpenAIResponseText(null) === null, "null OpenAI payload is invalid");
+assert(extractOpenAIResponseText(undefined) === null, "undefined OpenAI payload is invalid");
+assert(extractOpenAIResponseText({}) === null, "empty OpenAI object is invalid");
 assert(
-  extractGeminiText({ candidates: [{ content: { parts: [{ text: "" }] } }] }) === null,
-  "empty string Gemini text is invalid",
+  extractOpenAIResponseText({ choices: [{ message: { content: "" } }] }) === null,
+  "empty string OpenAI text is invalid",
 );
 assert(
-  extractGeminiText({ candidates: [{ content: { parts: [{ text: "   " }] } }] }) === null,
-  "whitespace-only Gemini text is invalid",
+  extractOpenAIResponseText({ choices: [{ message: { content: "   " } }] }) === null,
+  "whitespace-only OpenAI text is invalid",
 );
 assert(
-  extractGeminiText({ candidates: [{ content: { parts: [{ text: null }] } }] }) === null,
-  "null Gemini text part is invalid",
+  extractOpenAIResponseText({ choices: [{ message: { content: null } }] }) === null,
+  "null OpenAI text part is invalid",
 );
 const emptyUserReply = ensureAssistantReply("", "ar", "empty");
-assert(emptyUserReply.trim().length > 0, "empty Gemini response does not yield empty user message");
+assert(emptyUserReply.trim().length > 0, "empty LLM response does not yield empty user message");
 assert(
   emptyUserReply === GEMINI_UNCLEAR_REPLY.ar,
-  "empty Gemini response uses unclear fallback",
+  "empty LLM response uses unclear fallback",
 );
 assert(
   ensureAssistantReply("   ", "en", "empty") === GEMINI_UNCLEAR_REPLY.en,
-  "whitespace Gemini response uses English unclear fallback",
+  "whitespace LLM response uses English unclear fallback",
 );
 assert(
   ensureAssistantReply(null, "ar", "empty").includes("واتساب"),
-  "null Gemini response still offers WhatsApp",
+  "null LLM response still offers WhatsApp",
 );
 
 console.log(`\nResults: ${passed} passed, ${failed} failed`);

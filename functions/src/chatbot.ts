@@ -5,7 +5,7 @@ import { saveChatContact } from "../../src/server/chatbot/saveContact";
 import { CORS_ORIGINS } from "./shared/cors";
 import { handlePostJson } from "./shared/http";
 
-export const geminiApiKey = defineSecret("GEMINI_API_KEY");
+export const geminiApiKey = defineSecret("OPENAI_API_KEY");
 
 export const chatbotSendMessage = onRequest(
   {

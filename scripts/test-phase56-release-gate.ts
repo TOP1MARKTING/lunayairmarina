@@ -16,7 +16,7 @@ import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { sanitizeAiUsageLogInput, logAiUsage, writeAiUsageLogAdmin } from "../src/server/agent/usageLog";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { ensureAssistantReply } from "../src/server/chatbot/geminiFallback";
 import { processChatMessage } from "../src/server/chatbot/chat";
 import {
@@ -94,7 +94,7 @@ function looksLikeSecurityLeak(reply: string): boolean {
 function isQuota(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   return /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ||
-    (error instanceof GeminiServiceError && error.kind === "quota");
+    (error instanceof OpenAIServiceError && error.kind === "quota");
 }
 
 function inventedClaim(reply: string): boolean {
@@ -191,7 +191,7 @@ async function runLiveScenario(
         quotaBlocked = true;
         return "skip-quota";
       }
-      if (error instanceof GeminiServiceError && error.kind === "network") return "skip-network";
+      if (error instanceof OpenAIServiceError && error.kind === "network") return "skip-network";
       console.error(error);
       return "fail";
     }
@@ -215,7 +215,7 @@ async function runLiveProbe(name: string, msg: string, lang: "ar" | "en", check?
       quotaBlocked = true;
       return "skip-quota";
     }
-    return error instanceof GeminiServiceError && error.kind === "network" ? "skip-network" : "fail";
+    return error instanceof OpenAIServiceError && error.kind === "network" ? "skip-network" : "fail";
   }
 }
 
@@ -226,11 +226,11 @@ console.log("=== BASELINE (deterministic) ===\n");
 const chatSrc = readFileSync(join(process.cwd(), "src/server/chatbot/chat.ts"), "utf8");
 assertDet(/generateAgentTurn/.test(chatSrc), "chat.ts uses generateAgentTurn");
 assertDet(!/generateStaticReply/.test(chatSrc), "no generateStaticReply in chat.ts");
-assertDet(!/openai|OpenAI/.test(chatSrc), "no OpenAI in chat.ts");
+assertDet(/OpenAIServiceError|from "\.\/openai"/.test(chatSrc), "chat.ts uses OpenAI");
 for (const rel of ["src/components/site/ChatbotWidget.tsx", "src/lib/chatbot/session.ts"]) {
   const c = readFileSync(join(process.cwd(), rel), "utf8");
-  assertDet(!/GEMINI_API_KEY/.test(c), `no client API key: ${rel}`);
-  assertDet(!/generativelanguage\.googleapis\.com/.test(c), `no client Gemini call: ${rel}`);
+  assertDet(!/OPENAI_API_KEY/.test(c), `no client API key: ${rel}`);
+  assertDet(!/api\.openai\.com/.test(c), `no client OpenAI call: ${rel}`);
 }
 
 // === ANALYTICS ===
@@ -297,7 +297,7 @@ console.log(`\nDeterministic: ${detPass} pass, ${detFail} fail\n`);
 
 // === LIVE (priority order) ===
 if (!cfg.geminiApiKey) {
-  console.log("No GEMINI_API_KEY — all live tests SKIP\n");
+  console.log("NO OPENAI_API_KEY — all live tests SKIP\n");
 } else {
   console.log("=== LIVE CERTIFICATION (priority order) ===\n");
 

@@ -19,7 +19,7 @@ import {
   resetKnowledgeCacheForTests,
   retrieveKnowledge,
 } from "../src/server/agent/retrieve";
-import { generateChatReply } from "../src/server/chatbot/gemini";
+import { generateChatReply } from "../src/server/chatbot/openai";
 import { getChatbotConfig } from "../src/server/chatbot/config";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

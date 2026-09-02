@@ -13,7 +13,7 @@ import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { sanitizeAiUsageLogInput, logAiUsage, writeAiUsageLogAdmin } from "../src/server/agent/usageLog";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { ensureAssistantReply } from "../src/server/chatbot/geminiFallback";
 import {
   analyzeAgentTurn,
@@ -86,7 +86,7 @@ function looksLikeSecurityLeak(reply: string): boolean {
 function isQuota(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : String(error);
   return /429|quota|RESOURCE_EXHAUSTED/i.test(msg) ||
-    (error instanceof GeminiServiceError && error.kind === "quota");
+    (error instanceof OpenAIServiceError && error.kind === "quota");
 }
 
 async function runTurn(
@@ -171,7 +171,7 @@ async function runLiveScenario(
         quotaBlocked = true;
         return "skip-quota";
       }
-      if (error instanceof GeminiServiceError && error.kind === "network") return "skip-network";
+      if (error instanceof OpenAIServiceError && error.kind === "network") return "skip-network";
       console.error(error);
       return "fail";
     }
@@ -401,26 +401,28 @@ const clientPaths = [
 ];
 for (const rel of clientPaths) {
   const content = readFileSync(join(process.cwd(), rel), "utf8");
-  assertDet(!/GEMINI_API_KEY|generateStaticReply|openai/i.test(content), `client clean: ${rel}`);
+  assertDet(!/OPENAI_API_KEY|generateStaticReply|api\.openai\.com/i.test(content), `client clean: ${rel}`);
 }
 
 const serverFiles = walk(join(process.cwd(), "src")).filter((f) => !f.includes("secrets"));
 let staticEngine = false;
-let openaiRef = false;
+let geminiRef = false;
 for (const file of serverFiles.slice(0, 200)) {
   const content = readFileSync(file, "utf8");
   if (/generateStaticReply/.test(content)) staticEngine = true;
-  if (/openai|gpt-4|anthropic/i.test(content) && !file.includes("test-")) openaiRef = true;
+  if (/generativelanguage\.googleapis|GEMINI_API_KEY/i.test(content) && !file.includes("test-")) {
+    geminiRef = true;
+  }
 }
 assertDet(!staticEngine, "no Static Engine in src");
-assertDet(!openaiRef, "no OpenAI references in src");
+assertDet(!geminiRef, "no Gemini references in src");
 
 console.log(`\nDeterministic: ${detPass} pass, ${detFail} fail\n`);
 
 // --- LIVE GEMINI ---
 const config = getChatbotConfig();
-if (!config.geminiApiKey) {
-  console.log("No GEMINI_API_KEY — skipping live certification\n");
+if (!config.openaiApiKey) {
+  console.log("NO OPENAI_API_KEY — skipping live certification\n");
 } else {
   console.log("=== LIVE GEMINI CERTIFICATION ===\n");
 
@@ -544,7 +546,7 @@ if (!config.geminiApiKey) {
         quotaBlocked = true;
         recordLive("skip-quota", `security: ${msg.slice(0, 30)}`);
       } else {
-        recordLive(error instanceof GeminiServiceError && error.kind === "network" ? "skip-network" : "fail", `security: ${msg.slice(0, 30)}`);
+        recordLive(error instanceof OpenAIServiceError && error.kind === "network" ? "skip-network" : "fail", `security: ${msg.slice(0, 30)}`);
       }
     }
   }

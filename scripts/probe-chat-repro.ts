@@ -94,7 +94,7 @@ function parseCode(text: string): string {
 async function runLocal(sessionId: string) {
   console.log("\n=== LOCAL processChatMessage ===\n");
   const config = getChatbotConfig();
-  console.log(`geminiKeyPresent=${Boolean(config.geminiApiKey)}`);
+  console.log(`geminiKeyPresent=${Boolean(config.openaiApiKey)}`);
 
   let history: HistoryItem[] = [
     {

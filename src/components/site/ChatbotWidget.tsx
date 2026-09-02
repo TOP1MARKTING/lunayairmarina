@@ -324,7 +324,7 @@ export function ChatbotWidget() {
     (code: ChatErrorCode): string => {
       if (code === "RATE_LIMIT") return t("chatbot.rateLimit");
       if (code === "TIMEOUT") return t("chatbot.timeout");
-      if (code === "GEMINI" || code === "CONTEXT" || code === "CONFIG") return t("chatbot.aiUnavailable");
+      if (code === "GEMINI" || code === "AI" || code === "CONTEXT" || code === "CONFIG") return t("chatbot.aiUnavailable");
       if (code === "VALIDATION") return t("chatbot.validation");
       return t("chatbot.error");
     },

@@ -13,7 +13,7 @@ import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { sanitizeAiUsageLogInput, logAiUsage, writeAiUsageLogAdmin } from "../src/server/agent/usageLog";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { ensureAssistantReply } from "../src/server/chatbot/geminiFallback";
 import { processChatMessage } from "../src/server/chatbot/chat";
 import {
@@ -67,7 +67,7 @@ function assertDet(ok: boolean, msg: string) {
 
 function isQuota(e: unknown): boolean {
   const m = e instanceof Error ? e.message : String(e);
-  return /429|quota|RESOURCE_EXHAUSTED/i.test(m) || (e instanceof GeminiServiceError && e.kind === "quota");
+  return /429|quota|RESOURCE_EXHAUSTED/i.test(m) || (e instanceof OpenAIServiceError && e.kind === "quota");
 }
 
 function secLeak(reply: string): boolean {
@@ -141,7 +141,7 @@ const chatTs = readFileSync(join(process.cwd(), "src/server/chatbot/chat.ts"), "
 assertDet(/generateAgentTurn/.test(chatTs) && !/generateStaticReply/.test(chatTs), "Gemini-only chat.ts");
 for (const f of ["src/components/site/ChatbotWidget.tsx", "src/lib/chatbot/session.ts"]) {
   const c = readFileSync(join(process.cwd(), f), "utf8");
-  assertDet(!/GEMINI_API_KEY|generativelanguage\.googleapis/.test(c), `client safe: ${f}`);
+  assertDet(!/OPENAI_API_KEY|api\.openai\.com/.test(c), `client safe: ${f}`);
 }
 console.log(`Preflight det: ${detPass} pass, ${detFail} fail\n`);
 

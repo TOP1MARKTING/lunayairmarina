@@ -36,10 +36,10 @@ import { detectGroundingViolations } from "../src/server/chatbot/agent/grounding
 import { resolveCtaType } from "../src/server/chatbot/agent/ctaIntelligence";
 import { blockWhatsAppForTurns } from "../src/server/chatbot/agent/antiRepetition";
 import { ensureAssistantReply, GEMINI_UNCLEAR_REPLY } from "../src/server/chatbot/geminiFallback";
-import { extractGeminiText } from "../src/server/chatbot/gemini";
+import { extractGeminiText } from "../src/server/chatbot/openai";
 import { checkRateLimit, resetRateLimitStoreForTests } from "../src/server/chatbot/rateLimit";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateChatReply } from "../src/server/chatbot/gemini";
+import { generateChatReply } from "../src/server/chatbot/openai";
 
 let passed = 0;
 let failed = 0;

@@ -44,9 +44,9 @@ import { getChatbotConfig } from "./config";
 import { resolveConversationHistory } from "./conversationHistory";
 import { createChatRequestId, logChatTrace } from "./chatTrace";
 import { checkRateLimit } from "./rateLimit";
-import { generateAgentTurn, GeminiServiceError } from "./gemini";
+import { generateAgentTurn, OpenAIServiceError } from "./openai";
 import { composeGeminiKnowledge, getVerbatimCheckSources } from "./knowledge";
-import { prepareGeminiHistory } from "./contextManagement";
+import { prepareLlmHistory } from "./contextManagement";
 import { leadPatchFromContext } from "./leadPatch";
 import {
   analyzeAgentTurn,
@@ -263,7 +263,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
   }
   logChatTrace("RATE_LIMIT_PASS", { sessionId: validated.data.sessionId }, requestId);
 
-  if (!config.geminiApiKey) {
+  if (!config.openaiApiKey) {
     logChatTrace(
       "REQUEST_FAILED",
       { stage: "config", code: "CONFIG", sessionId: validated.data.sessionId },
@@ -348,10 +348,10 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
           })
         : undefined;
 
-    const geminiHistory = prepareGeminiHistory(conversationHistory, config);
-    const historyText = buildHistoryContextSnippet(geminiHistory);
+    const llmHistory = prepareLlmHistory(conversationHistory, config);
+    const historyText = buildHistoryContextSnippet(llmHistory);
 
-    logChatTrace("GEMINI_START", { sessionId: validated.data.sessionId }, requestId);
+    logChatTrace("LLM_START", { sessionId: validated.data.sessionId }, requestId);
 
     let retrieval: Awaited<ReturnType<typeof retrieveKnowledge>>;
     try {
@@ -443,7 +443,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
         config,
         validated.data.language,
         validated.data.message,
-        geminiHistory,
+        llmHistory,
         composedKnowledge,
         {
           agentStateBlock: buildAgentStateBlock(
@@ -500,8 +500,8 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
         logChatTrace(
           "REQUEST_FAILED",
           {
-            stage: "gemini",
-            code: "GEMINI",
+            stage: "llm",
+            code: "AI",
             reason: "empty_reply_after_polish",
             sessionId: validated.data.sessionId,
             violations: polished.violations,
@@ -512,12 +512,12 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
           event: "chat_error",
           sessionId: validated.data.sessionId,
           language: validated.data.language,
-          errorCode: "GEMINI",
+          errorCode: "AI",
         });
-        return { ok: false, code: "GEMINI" };
+        return { ok: false, code: "AI" };
       }
       logChatTrace(
-        "GEMINI_OK",
+        "LLM_OK",
         {
           sessionId: validated.data.sessionId,
           intent: resolvedIntent,
@@ -536,17 +536,17 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
         requestId,
       );
     } catch (error) {
-      const kind = error instanceof GeminiServiceError ? error.kind : "unknown";
+      const kind = error instanceof OpenAIServiceError ? error.kind : "unknown";
       const code: ChatErrorCode =
-        kind === "timeout" ? "TIMEOUT" : kind === "context" ? "CONTEXT" : "GEMINI";
+        kind === "timeout" ? "TIMEOUT" : kind === "context" ? "CONTEXT" : "AI";
       logChatTrace(
         "REQUEST_FAILED",
         {
-          stage: "gemini",
+          stage: "llm",
           code,
           sessionId: validated.data.sessionId,
           kind,
-          hasApiKey: Boolean(config.geminiApiKey),
+          hasApiKey: Boolean(config.openaiApiKey),
         },
         requestId,
       );
@@ -726,7 +726,7 @@ export async function processChatMessage(input: unknown): Promise<ChatResponse> 
     logChatTrace(
       "REQUEST_FAILED",
       {
-        stage: "gemini",
+        stage: "llm",
         code: errorCode,
         sessionId: validated.data.sessionId,
         conversationHistoryCount: validated.data.history.length,

@@ -63,7 +63,7 @@ if (absolutizeCredentialPath("FIREBASE_SERVICE_ACCOUNT_PATH")) {
   // keep explicit GAC when set
 }
 
-console.log("[emulator] GEMINI_API_KEY:", process.env.GEMINI_API_KEY?.trim() ? "loaded" : "missing");
+console.log("[emulator] OPENAI_API_KEY:", process.env.OPENAI_API_KEY?.trim() ? "loaded" : "missing");
 console.log("[emulator] FIREBASE_AUTH_EMULATOR_HOST:", process.env.FIREBASE_AUTH_EMULATOR_HOST);
 console.log(
   "[emulator] FIRESTORE_EMULATOR_HOST:",

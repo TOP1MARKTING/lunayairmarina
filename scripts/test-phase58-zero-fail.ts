@@ -16,7 +16,7 @@ import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { sanitizeAiUsageLogInput, logAiUsage } from "../src/server/agent/usageLog";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import { ensureAssistantReply } from "../src/server/chatbot/geminiFallback";
 import { processChatMessage } from "../src/server/chatbot/chat";
 import {
@@ -73,11 +73,11 @@ function log(row: Row) {
 function isQuota(e: unknown): boolean {
   const m = e instanceof Error ? e.message : String(e);
   return /429|quota|RESOURCE_EXHAUSTED|rate limit/i.test(m) ||
-    (e instanceof GeminiServiceError && e.kind === "quota");
+    (e instanceof OpenAIServiceError && e.kind === "quota");
 }
 
 function isNetwork(e: unknown): boolean {
-  return e instanceof GeminiServiceError && (e.kind === "network" || e.kind === "timeout");
+  return e instanceof OpenAIServiceError && (e.kind === "network" || e.kind === "timeout");
 }
 
 function secLeak(reply: string): boolean {
@@ -101,7 +101,7 @@ async function delay() {
 }
 
 async function runTurn(msg: string, lang: "ar" | "en", hist: ChatHistoryItem[], ctx: CustomerContext) {
-  if (quotaBlocked) throw new GeminiServiceError("quota blocked", { retryable: false, kind: "quota" });
+  if (quotaBlocked) throw new OpenAIServiceError("quota blocked", { retryable: false, kind: "quota" });
   geminiCalls += 1;
   const a = analyzeAgentTurn(msg, lang, ctx);
   let c = a.context;
@@ -202,12 +202,12 @@ console.log("=== DETERMINISTIC + RUNTIME AUDIT ===\n");
 const chatTs = readFileSync(join(process.cwd(), "src/server/chatbot/chat.ts"), "utf8");
 det(/generateAgentTurn/.test(chatTs), "chat.ts uses generateAgentTurn");
 det(!/generateStaticReply/.test(chatTs), "no generateStaticReply");
-det(!/openai|OpenAI/.test(chatTs), "no OpenAI in chat.ts");
+det(/OpenAIServiceError|from "\.\/openai"/.test(chatTs), "chat.ts uses OpenAI");
 det(/sanitizeContextForGemini/.test(chatTs), "sanitized Gemini context");
 det(/persistConversationTurn/.test(chatTs) && /Conversation persistence must not break/.test(chatTs), "persist non-blocking");
 for (const f of ["src/components/site/ChatbotWidget.tsx", "src/lib/chatbot/session.ts", "src/lib/chatbot/types.ts"]) {
   const c = readFileSync(join(process.cwd(), f), "utf8");
-  det(!/GEMINI_API_KEY|generativelanguage\.googleapis/.test(c), `client safe: ${f}`);
+  det(!/OPENAI_API_KEY|api\.openai\.com/.test(c), `client safe: ${f}`);
 }
 for (const ev of ["chat_message", "intent_detected", "lead_created", "stage_changed", "cta_shown", "handoff_triggered", "objection_detected", "missing_info_asked", "conversion_signal"] as const) {
   det(!/phone|email|api.?key|@/i.test(JSON.stringify(sanitizeAiUsageLogInput({ event: ev, sessionId: "s12345678" }))), `analytics ${ev}`);
@@ -230,7 +230,7 @@ if (detFail > 0) {
 // === GEMINI PROBE ===
 const cfg = getChatbotConfig();
 if (!cfg.geminiApiKey) {
-  console.log("CERTIFICATION BLOCKED — NO GEMINI_API_KEY\n");
+  console.log("CERTIFICATION BLOCKED — NO OPENAI_API_KEY\n");
   quotaBlocked = true;
 } else {
   console.log("=== GEMINI PROBE ===\n");

@@ -4,10 +4,10 @@ import { readServerEnv } from "@/server/env";
 
 export const CHATBOT_DEFAULTS = {
   maxMessageLength: 1000,
-  /** Recent messages sent to Gemini (not a user-facing conversation cap). */
-  geminiMaxHistoryItems: 12,
-  /** Token budget for Gemini multi-turn contents (older turns rely on conversation summary). */
-  geminiHistoryTokenBudget: 6000,
+  /** Recent messages sent to the LLM (not a user-facing conversation cap). */
+  llmMaxHistoryItems: 12,
+  /** Token budget for multi-turn context (older turns rely on conversation summary). */
+  llmHistoryTokenBudget: 6000,
   rateLimitWindowMs: 60_000,
   /**
    * Abuse protection only — NOT a conversation message cap.
@@ -17,10 +17,10 @@ export const CHATBOT_DEFAULTS = {
   rateLimitMaxRequests: 120,
   maxOutputTokens: 2048,
   requestTimeoutMs: 30_000,
-  geminiModel: "gemini-3.5-flash-lite",
+  openaiModel: "gpt-4o-mini",
   /** Higher than 0.4 for natural paraphrase; still conservative for grounding. */
-  geminiTemperature: 0.6,
-  geminiTopP: 0.92,
+  llmTemperature: 0.6,
+  llmTopP: 0.92,
 } as const;
 
 function readFloat(name: string, fallback: number, min: number, max: number): number {
@@ -39,25 +39,51 @@ function readInt(name: string, fallback: number, min: number, max: number): numb
   return Math.min(max, Math.max(min, parsed));
 }
 
+function readIntWithLegacy(
+  primary: string,
+  legacy: string,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const primaryRaw = readServerEnv(primary);
+  if (primaryRaw) return readInt(primary, fallback, min, max);
+  return readInt(legacy, fallback, min, max);
+}
+
+function readFloatWithLegacy(
+  primary: string,
+  legacy: string,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
+  const primaryRaw = readServerEnv(primary);
+  if (primaryRaw) return readFloat(primary, fallback, min, max);
+  return readFloat(legacy, fallback, min, max);
+}
+
 export function getChatbotConfig() {
   return {
-    geminiApiKey: readServerEnv("GEMINI_API_KEY"),
-    geminiModel: readServerEnv("GEMINI_MODEL") || CHATBOT_DEFAULTS.geminiModel,
+    openaiApiKey: readServerEnv("OPENAI_API_KEY"),
+    openaiModel: readServerEnv("OPENAI_MODEL") || CHATBOT_DEFAULTS.openaiModel,
     maxMessageLength: readInt(
       "CHATBOT_MAX_MESSAGE_LENGTH",
       CHATBOT_DEFAULTS.maxMessageLength,
       100,
       4000,
     ),
-    geminiMaxHistoryItems: readInt(
+    llmMaxHistoryItems: readIntWithLegacy(
+      "CHATBOT_LLM_HISTORY_ITEMS",
       "CHATBOT_GEMINI_HISTORY_ITEMS",
-      CHATBOT_DEFAULTS.geminiMaxHistoryItems,
+      CHATBOT_DEFAULTS.llmMaxHistoryItems,
       2,
       32,
     ),
-    geminiHistoryTokenBudget: readInt(
+    llmHistoryTokenBudget: readIntWithLegacy(
+      "CHATBOT_LLM_HISTORY_TOKENS",
       "CHATBOT_GEMINI_HISTORY_TOKENS",
-      CHATBOT_DEFAULTS.geminiHistoryTokenBudget,
+      CHATBOT_DEFAULTS.llmHistoryTokenBudget,
       1000,
       24_000,
     ),
@@ -85,13 +111,20 @@ export function getChatbotConfig() {
       5_000,
       120_000,
     ),
-    geminiTemperature: readFloat(
+    llmTemperature: readFloatWithLegacy(
+      "CHATBOT_LLM_TEMPERATURE",
       "CHATBOT_GEMINI_TEMPERATURE",
-      CHATBOT_DEFAULTS.geminiTemperature,
+      CHATBOT_DEFAULTS.llmTemperature,
       0.1,
       1,
     ),
-    geminiTopP: readFloat("CHATBOT_GEMINI_TOP_P", CHATBOT_DEFAULTS.geminiTopP, 0.5, 1),
+    llmTopP: readFloatWithLegacy(
+      "CHATBOT_LLM_TOP_P",
+      "CHATBOT_GEMINI_TOP_P",
+      CHATBOT_DEFAULTS.llmTopP,
+      0.5,
+      1,
+    ),
   };
 }
 

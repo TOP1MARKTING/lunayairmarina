@@ -9,7 +9,7 @@ import { emptyCustomerContext, type CustomerContext } from "../src/lib/agent/con
 import { retrieveKnowledge } from "../src/server/agent/retrieve";
 import { composeGeminiKnowledge } from "../src/server/chatbot/knowledge";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn } from "../src/server/chatbot/gemini";
+import { generateAgentTurn } from "../src/server/chatbot/openai";
 import {
   analyzeAgentTurn,
   buildAgentStateBlock,
@@ -406,8 +406,8 @@ const specs: TurnSpec[] = [
 
 console.log("Phase 5.2 live Gemini tests\n");
 const config = getChatbotConfig();
-if (!config.geminiApiKey) {
-  console.log("SKIP: GEMINI_API_KEY not set — all live tests skipped");
+if (!config.openaiApiKey) {
+  console.log("SKIP: OPENAI_API_KEY not set — all live tests skipped");
   process.exit(0);
 }
 

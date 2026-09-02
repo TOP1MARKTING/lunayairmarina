@@ -2,16 +2,15 @@ import type { ChatHistoryItem, ChatLanguage } from "@/lib/chatbot/types";
 import type { CustomerContext } from "@/lib/agent/context";
 import type { ChatbotConfig } from "./config";
 import { buildSystemPrompt } from "./prompt";
-import { shrinkGeminiHistoryForRetry } from "./contextManagement";
+import { shrinkLlmHistoryForRetry } from "./contextManagement";
 import { extractUserFacingReply, parseGeminiAgentOutputDetailed } from "./agent/parseOutput";
 import type { AgentTurnResult } from "./agent/types";
-import { geminiResponseJsonSchema } from "./agent/types";
 import {
   isNearVerbatimKnowledgeMatch,
   PARAPHRASE_RETRY_HINT,
 } from "./agent/verbatimGuard";
 
-export type GeminiAgentContext = {
+export type LlmAgentContext = {
   conversationSummary?: string;
   customerContext?: CustomerContext;
   offerHandoff?: boolean;
@@ -24,107 +23,106 @@ export type GeminiAgentContext = {
   paraphraseRetryDone?: boolean;
 };
 
-interface GeminiContent {
-  role: "user" | "model";
-  parts: Array<{ text: string }>;
+interface OpenAIChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
 }
 
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: Array<{ text?: string }>;
+interface OpenAIChatResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | null;
     };
-    finishReason?: string;
+    finish_reason?: string;
   }>;
   error?: {
-    code?: number;
     message?: string;
-    status?: string;
+    type?: string;
+    code?: string;
   };
 }
 
-export class GeminiServiceError extends Error {
+export class OpenAIServiceError extends Error {
   readonly retryable: boolean;
   readonly status?: number;
   readonly kind: "quota" | "context" | "timeout" | "api" | "empty" | "network";
 
   constructor(
     message: string,
-    options: { retryable: boolean; status?: number; kind?: GeminiServiceError["kind"] },
+    options: { retryable: boolean; status?: number; kind?: OpenAIServiceError["kind"] },
   ) {
     super(message);
-    this.name = "GeminiServiceError";
+    this.name = "OpenAIServiceError";
     this.retryable = options.retryable;
     this.status = options.status;
     this.kind = options.kind ?? "api";
   }
 }
 
-export function extractGeminiText(payload: unknown): string | null {
+export function extractOpenAIResponseText(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;
-  const candidates = (payload as GeminiResponse).candidates;
-  if (!Array.isArray(candidates) || candidates.length === 0) return null;
-  const parts = candidates[0]?.content?.parts;
-  if (!Array.isArray(parts) || parts.length === 0) return null;
-  const text = parts
-    .map((part) => (typeof part?.text === "string" ? part.text : ""))
-    .join("")
-    .trim();
+  const choices = (payload as OpenAIChatResponse).choices;
+  if (!Array.isArray(choices) || choices.length === 0) return null;
+  const content = choices[0]?.message?.content;
+  if (typeof content !== "string") return null;
+  const text = content.trim();
   return text.length > 0 ? text : null;
 }
 
-function classifyGeminiFailure(status: number, message: string): GeminiServiceError["kind"] {
+function classifyOpenAIFailure(status: number, message: string): OpenAIServiceError["kind"] {
   if (status === 429) return "quota";
   if (status === 408) return "timeout";
-  if (status === 400 && /context|token|length|too large|exceed/i.test(message)) return "context";
+  if (status === 400 && /context|token|length|too large|exceed|maximum context/i.test(message)) {
+    return "context";
+  }
   return "api";
 }
 
-function toGeminiHistory(history: ChatHistoryItem[]): GeminiContent[] {
+function toOpenAIHistory(history: ChatHistoryItem[]): OpenAIChatMessage[] {
   return history.map((item) => ({
-    role: item.role === "assistant" ? "model" : "user",
-    parts: [{ text: item.content }],
+    role: item.role === "assistant" ? "assistant" : "user",
+    content: item.content,
   }));
 }
 
-async function callGeminiOnce(
+async function callOpenAIOnce(
   config: ChatbotConfig,
   language: ChatLanguage,
   message: string,
   history: ChatHistoryItem[],
   retrievedKnowledge: string,
-  agentContext?: GeminiAgentContext,
+  agentContext?: LlmAgentContext,
 ): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent`;
+  const url = "https://api.openai.com/v1/chat/completions";
+  const jsonMode = agentContext?.jsonMode !== false;
 
-  const body = {
-    systemInstruction: {
-      parts: [
-        {
-          text: buildSystemPrompt(language, retrievedKnowledge, {
-            conversationSummary: agentContext?.conversationSummary,
-            customerContext: agentContext?.customerContext,
-            offerHandoff: agentContext?.offerHandoff,
-            needsContactCapture: agentContext?.needsContactCapture,
-            contactAlreadyAsked: agentContext?.contactAlreadyAsked,
-            agentStateBlock: agentContext?.agentStateBlock,
-          }),
-        },
-      ],
+  const messages: OpenAIChatMessage[] = [
+    {
+      role: "system",
+      content: buildSystemPrompt(language, retrievedKnowledge, {
+        conversationSummary: agentContext?.conversationSummary,
+        customerContext: agentContext?.customerContext,
+        offerHandoff: agentContext?.offerHandoff,
+        needsContactCapture: agentContext?.needsContactCapture,
+        contactAlreadyAsked: agentContext?.contactAlreadyAsked,
+        agentStateBlock: agentContext?.agentStateBlock,
+      }),
     },
-    contents: [...toGeminiHistory(history), { role: "user", parts: [{ text: message }] }],
-    generationConfig: {
-      maxOutputTokens: config.maxOutputTokens,
-      temperature: config.geminiTemperature,
-      topP: config.geminiTopP,
-      ...(agentContext?.jsonMode === false
-        ? {}
-        : {
-            responseMimeType: "application/json",
-            responseSchema: geminiResponseJsonSchema(),
-          }),
-    },
+    ...toOpenAIHistory(history),
+    { role: "user", content: message },
+  ];
+
+  const body: Record<string, unknown> = {
+    model: config.openaiModel,
+    messages,
+    max_tokens: config.maxOutputTokens,
+    temperature: config.llmTemperature,
+    top_p: config.llmTopP,
   };
+
+  if (jsonMode) {
+    body.response_format = { type: "json_object" };
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
@@ -134,44 +132,44 @@ async function callGeminiOnce(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-goog-api-key": config.geminiApiKey,
+        Authorization: `Bearer ${config.openaiApiKey}`,
       },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
 
-    let payload: GeminiResponse;
+    let payload: OpenAIChatResponse;
     try {
-      payload = (await response.json()) as GeminiResponse;
+      payload = (await response.json()) as OpenAIChatResponse;
     } catch {
-      throw new GeminiServiceError("Invalid Gemini response", { retryable: false, kind: "empty" });
+      throw new OpenAIServiceError("Invalid OpenAI response", { retryable: false, kind: "empty" });
     }
 
     if (!response.ok) {
-      const message = payload.error?.message ?? `Gemini request failed (${response.status})`;
-      const kind = classifyGeminiFailure(response.status, message);
+      const errorMessage = payload.error?.message ?? `OpenAI request failed (${response.status})`;
+      const kind = classifyOpenAIFailure(response.status, errorMessage);
       const contextOverflow = kind === "context";
       const retryable =
         response.status === 429 || response.status >= 500 || contextOverflow;
-      throw new GeminiServiceError(message, { retryable, status: response.status, kind });
+      throw new OpenAIServiceError(errorMessage, { retryable, status: response.status, kind });
     }
 
-    const text = extractGeminiText(payload);
+    const text = extractOpenAIResponseText(payload);
     if (!text) {
-      throw new GeminiServiceError("Empty Gemini response", { retryable: false, kind: "empty" });
+      throw new OpenAIServiceError("Empty OpenAI response", { retryable: false, kind: "empty" });
     }
 
     return text;
   } catch (error) {
-    if (error instanceof GeminiServiceError) throw error;
+    if (error instanceof OpenAIServiceError) throw error;
     if (error instanceof Error && error.name === "AbortError") {
-      throw new GeminiServiceError("Gemini request timed out", {
+      throw new OpenAIServiceError("OpenAI request timed out", {
         retryable: true,
         kind: "timeout",
         status: 408,
       });
     }
-    throw new GeminiServiceError("Gemini network error", { retryable: true, kind: "network" });
+    throw new OpenAIServiceError("OpenAI network error", { retryable: true, kind: "network" });
   } finally {
     clearTimeout(timeout);
   }
@@ -197,7 +195,7 @@ export async function generateChatReply(
   message: string,
   history: ChatHistoryItem[],
   retrievedKnowledge: string,
-  agentContext?: GeminiAgentContext,
+  agentContext?: LlmAgentContext,
 ): Promise<string> {
   const turn = await generateAgentTurn(
     config,
@@ -216,17 +214,17 @@ export async function generateAgentTurn(
   message: string,
   history: ChatHistoryItem[],
   retrievedKnowledge: string,
-  agentContext?: GeminiAgentContext,
+  agentContext?: LlmAgentContext,
 ): Promise<AgentTurnResult> {
-  if (!config.geminiApiKey) {
-    throw new GeminiServiceError("Gemini API key is not configured", {
+  if (!config.openaiApiKey) {
+    throw new OpenAIServiceError("OpenAI API key is not configured", {
       retryable: false,
       kind: "api",
     });
   }
 
-  const run = async (ctx: GeminiAgentContext | undefined) =>
-    callGeminiOnce(config, language, message, history, retrievedKnowledge, ctx);
+  const run = async (ctx: LlmAgentContext | undefined) =>
+    callOpenAIOnce(config, language, message, history, retrievedKnowledge, ctx);
 
   let raw: string;
   let paraphraseRetried = false;
@@ -234,11 +232,11 @@ export async function generateAgentTurn(
   try {
     raw = await run(agentContext);
   } catch (error) {
-    if (error instanceof GeminiServiceError && error.retryable) {
+    if (error instanceof OpenAIServiceError && error.retryable) {
       const trimmedHistory =
-        error.status === 400 ? shrinkGeminiHistoryForRetry(history) : history;
+        error.status === 400 ? shrinkLlmHistoryForRetry(history) : history;
       try {
-        raw = await callGeminiOnce(
+        raw = await callOpenAIOnce(
           config,
           language,
           message,
@@ -248,11 +246,11 @@ export async function generateAgentTurn(
         );
       } catch (retryError) {
         if (
-          retryError instanceof GeminiServiceError &&
+          retryError instanceof OpenAIServiceError &&
           retryError.status === 400 &&
           agentContext?.jsonMode !== false
         ) {
-          raw = await callGeminiOnce(
+          raw = await callOpenAIOnce(
             config,
             language,
             message,
@@ -265,7 +263,7 @@ export async function generateAgentTurn(
         }
       }
     } else if (
-      error instanceof GeminiServiceError &&
+      error instanceof OpenAIServiceError &&
       error.status === 400 &&
       agentContext?.jsonMode !== false
     ) {
@@ -286,7 +284,7 @@ export async function generateAgentTurn(
   ) {
     nearVerbatimDetected = true;
     const hint = PARAPHRASE_RETRY_HINT[language === "ar" ? "ar" : "en"];
-    const retryContext: GeminiAgentContext = {
+    const retryContext: LlmAgentContext = {
       ...agentContext,
       paraphraseRetryDone: true,
       agentStateBlock: [agentContext?.agentStateBlock?.trim(), hint].filter(Boolean).join("\n\n"),
@@ -307,7 +305,7 @@ export async function generateAgentTurn(
   }
 
   if (!reply?.trim()) {
-    throw new GeminiServiceError("Empty Gemini response", { retryable: false, kind: "empty" });
+    throw new OpenAIServiceError("Empty OpenAI response", { retryable: false, kind: "empty" });
   }
 
   return {

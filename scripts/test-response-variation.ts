@@ -10,7 +10,7 @@ import { config as loadEnv } from "dotenv";
 
 import { emptyCustomerContext, extractContextFromMessage } from "../src/lib/agent/context";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateAgentTurn, GeminiServiceError } from "../src/server/chatbot/gemini";
+import { generateAgentTurn, OpenAIServiceError } from "../src/server/chatbot/openai";
 import {
   composeGeminiKnowledge,
   estimateKnowledgePayloadChars,
@@ -170,7 +170,7 @@ async function runTurn(question: string, run: number): Promise<TurnRecord> {
     };
   } catch (error) {
     const quota =
-      error instanceof GeminiServiceError &&
+      error instanceof OpenAIServiceError &&
       (error.kind === "quota" || error.status === 429);
     if (quota) {
       return {
@@ -240,8 +240,8 @@ function summarizeGroup(label: string, records: TurnRecord[]) {
 
 async function main() {
   const config = getChatbotConfig();
-  if (!config.geminiApiKey) {
-    console.error("SKIP — QUOTA: GEMINI_API_KEY not set");
+  if (!config.openaiApiKey) {
+    console.error("SKIP — QUOTA: OPENAI_API_KEY not set");
     process.exit(2);
   }
 

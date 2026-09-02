@@ -15,7 +15,7 @@ import {
   type CustomerContext,
 } from "../src/lib/agent/context";
 import { getChatbotConfig } from "../src/server/chatbot/config";
-import { generateChatReply } from "../src/server/chatbot/gemini";
+import { generateChatReply } from "../src/server/chatbot/openai";
 import {
   buildHistoryContextSnippet,
   resetKnowledgeCacheForTests,
@@ -182,13 +182,13 @@ async function runCase(
 async function main() {
   resetKnowledgeCacheForTests();
   const config = getChatbotConfig();
-  if (!config.geminiApiKey) {
-    console.error("BLOCKED: GEMINI_API_KEY is not set in .env");
+  if (!config.openaiApiKey) {
+    console.error("BLOCKED: OPENAI_API_KEY is not set in .env");
     process.exit(1);
   }
 
   console.log("\n=== LIVE GEMINI E2E ===\n");
-  console.log(`Model: ${config.geminiModel}`);
+  console.log(`Model: ${config.openaiModel}`);
   console.log(
     `Firebase Admin credentials: ${hasFirebaseAdminCredentials() ? "configured" : "NOT configured"}`,
   );

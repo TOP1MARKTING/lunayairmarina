@@ -28,6 +28,8 @@ type SecretRule = {
 };
 
 const SECRET_RULES: SecretRule[] = [
+  { id: "openai_api_key_assignment", pattern: /OPENAI_API_KEY\s*=\s*\S+/ },
+  { id: "openai_api_key_json", pattern: /"OPENAI_API_KEY"\s*:\s*"[^"]+"/ },
   { id: "gemini_api_key_assignment", pattern: /GEMINI_API_KEY\s*=\s*\S+/ },
   { id: "gemini_api_key_json", pattern: /"GEMINI_API_KEY"\s*:\s*"[^"]+"/ },
   { id: "private_key_field", pattern: /"private_key"\s*:\s*"/ },
