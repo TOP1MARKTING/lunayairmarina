@@ -10,7 +10,7 @@ import { TANSTACK_SERVER_FUNCTION_IDS } from "../src/lib/api/endpoints";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = resolve(root, "dist");
 const apiBase = (
-  process.env.VITE_API_BASE_URL?.trim() || "https://www.lunayairmarina.com"
+  process.env.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app"
 ).replace(/\/$/, "");
 
 function fail(message: string): never {

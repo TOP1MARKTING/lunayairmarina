@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
 
   const loadedEnv = loadEnv(mode, process.cwd(), "VITE_");
 
-  const apiBase = (loadedEnv.VITE_API_BASE_URL?.trim() || "https://www.lunayairmarina.com").replace(
+  const apiBase = (loadedEnv.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app").replace(
 
     /\/$/,
 

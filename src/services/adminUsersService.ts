@@ -355,6 +355,7 @@ export async function updateAdminUser(
     const nextPassword = input.password.trim();
     if (isSuperAdmin(actor)) {
       await setPasswordAsSuperAdmin(id, nextPassword);
+      await storeAdminPassword(id, nextPassword);
     } else {
       await sendPasswordResetEmail(getFirebaseAuth(), profile.email);
     }

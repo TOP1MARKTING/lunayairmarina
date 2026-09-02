@@ -44,6 +44,8 @@
     "test:functions": "tsx scripts/test-firebase-functions.ts",
     "test:functions:auth": "node scripts/test-firebase-functions-auth.mjs",
     "test:serverfn:auth": "tsx scripts/test-server-fn-auth.ts",
+    "test:admin:audit": "tsx scripts/test-admin-audit.ts --live",
+    "test:admin:pages": "tsx scripts/test-admin-pages-live.ts",
     "emulators:start": "node scripts/start-functions-emulator.mjs"
   },
   "dependencies": {

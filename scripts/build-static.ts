@@ -5,7 +5,7 @@
  *   cPanel (static dist/) → Vercel free tier (TanStack server functions) → Firebase Spark + Gemini
  *
  * Set VITE_SITE_URL to the client's cPanel canonical origin before building.
- * Set VITE_API_BASE_URL to the Vercel backend origin (defaults to www.lunayairmarina.com).
+ * Set VITE_API_BASE_URL to the Vercel backend origin (defaults to lunayairmarina.vercel.app).
  */
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 const apiBase = (
-  process.env.VITE_API_BASE_URL?.trim() || "https://www.lunayairmarina.com"
+  process.env.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app"
 ).replace(/\/$/, "");
 
 process.env.VITE_API_TRANSPORT = process.env.VITE_API_TRANSPORT?.trim() || "server-fn";

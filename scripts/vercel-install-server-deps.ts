@@ -31,6 +31,11 @@ const pkg = {
   dependencies: {
     "firebase-admin": firebaseAdminVersion,
   },
+  // jwks-rsa@4 pulls jose@6 (ESM-only); Vercel CJS runtime cannot require() it.
+  overrides: {
+    jwks-rsa: "3.2.0",
+    jose: "4.15.9",
+  },
 };
 
 writeFileSync(resolve(funcDir, "package.json"), JSON.stringify(pkg, null, 2));

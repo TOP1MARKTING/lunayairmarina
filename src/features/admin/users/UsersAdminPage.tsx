@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { KeyRound, Pencil, Plus, Shield, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DataTable, RowAction, StatusBadge, type Column } from "@/components/admin/DataTable";
@@ -61,32 +61,40 @@ export function UsersAdminPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const refreshPasswords = useCallback(async (userRows: AdminUser[]) => {
+    if (!viewerIsSuperAdmin) {
+      setPasswords({});
+      return;
+    }
+    const ids = visibleUsers(currentUser, userRows).map((row) => row.id);
+    if (!ids.length) {
+      setPasswords({});
+      return;
+    }
+    try {
+      setPasswords(await fetchAdminPasswords(ids));
+    } catch {
+      setPasswords({});
+    }
+  }, [viewerIsSuperAdmin, currentUser]);
+
   useEffect(() => {
     void fetchAdminUsersFromFirebase()
       .then((users) => {
         if (users.length) {
           setRows(users);
           saveAdminUsers(users);
+          void refreshPasswords(users);
         }
       })
       .catch(() => {
         // Keep local cache if Firebase is unreachable.
       });
-  }, []);
+  }, [refreshPasswords]);
 
   useEffect(() => {
-    if (!viewerIsSuperAdmin) return;
-    const ids = visibleUsers(currentUser, rows).map((row) => row.id);
-    if (!ids.length) {
-      setPasswords({});
-      return;
-    }
-    void fetchAdminPasswords(ids)
-      .then(setPasswords)
-      .catch(() => {
-        setPasswords({});
-      });
-  }, [viewerIsSuperAdmin, currentUser, rows]);
+    void refreshPasswords(rows);
+  }, [refreshPasswords, rows]);
 
   if (!can("users") || !canDelegateAccounts(currentUser)) {
     return (
@@ -187,6 +195,9 @@ export function UsersAdminPage() {
           if (viewerIsSuperAdmin) {
             setPasswords((prev) => ({ ...prev, [editingId]: draft.password.trim() }));
             setNotice(t("admin.users.passwordUpdated"));
+            void refreshPasswords(
+              rows.map((row) => (row.id === editingId ? updated : row)),
+            );
           } else {
             setNotice(t("admin.users.resetSent"));
           }
@@ -203,9 +214,11 @@ export function UsersAdminPage() {
         const withoutDup = rows.filter(
           (row) => row.id !== created.id && row.email !== created.email,
         );
-        persistLocal([...withoutDup, created]);
+        const nextRows = [...withoutDup, created];
+        persistLocal(nextRows);
         if (viewerIsSuperAdmin) {
           setPasswords((prev) => ({ ...prev, [created.id]: draft.password.trim() }));
+          void refreshPasswords(nextRows);
         }
         setNotice(t("admin.users.saved"));
       }
