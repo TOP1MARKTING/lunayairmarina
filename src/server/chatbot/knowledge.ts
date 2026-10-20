@@ -61,7 +61,11 @@ function verifiedFactsPayload(language: ChatLanguage) {
       id: service.id,
       title: loc(service.title, lang),
       summary: loc(service.summary, lang),
+      intro: loc(service.intro, lang),
+      detailBody: loc(service.detailBody, lang),
       includes: service.includes[lang],
+      benefits: service.benefits[lang],
+      values: service.values[lang].map((item) => `${item.title}: ${item.description}`),
       pricingLabel: loc(service.pricingLabel, lang),
     })),
     contact: (() => {
@@ -228,6 +232,8 @@ function filterRetrievedForFactBudget(
   const filteredLines = retrieved.split("\n").filter((line) => {
     const trimmed = line.trim();
     if (!trimmed) return true;
+    // Keep long site prose (intro/detail/benefits paragraphs); only strip short bullets matching hidden facts.
+    if (trimmed.length > 90) return true;
     for (const hidden of hiddenProse) {
       if (trimmed.includes(hidden)) {
         for (const allowed of allowedProse) {
@@ -281,12 +287,19 @@ function buildSelectiveVerifiedBlock(
         id: s.id,
         title: s.title,
         summary: s.summary,
+        intro: s.intro,
+        detailBody: s.detailBody,
+        includes: s.includes,
+        benefits: s.benefits,
+        values: s.values,
       }));
   } else if (intentNeedsAllServices(intent)) {
     block.services = facts.services.map((s) => ({
       id: s.id,
       title: s.title,
       summary: s.summary,
+      intro: s.intro,
+      includes: s.includes,
     }));
   } else if (/YACHT|CREW|MARINA|VISITING/.test(intent)) {
     const id = resolveDisclosureTopic(undefined, intent);
@@ -297,6 +310,11 @@ function buildSelectiveVerifiedBlock(
           id: s.id,
           title: s.title,
           summary: s.summary,
+          intro: s.intro,
+          detailBody: s.detailBody,
+          includes: s.includes,
+          benefits: s.benefits,
+          values: s.values,
         }));
     }
   }
@@ -336,8 +354,8 @@ export function composeGeminiKnowledge(
   const selective = buildSelectiveVerifiedBlock(language, options);
   const styleNote =
     language === "ar"
-      ? "ملاحظة: استخدم فقط الحقائق في ALLOWED FACTS — هذا هو الحد الكامل للمعلومات المسموح بها. أعد صياغتها محادثياً ولا تنسخ الجمل حرفياً."
-      : "Note: Use ONLY facts in ALLOWED FACTS — that block is the complete factual boundary. Paraphrase naturally; do not copy sentences verbatim.";
+      ? "ملاحظة: اعتمد على ALLOWED FACTS أولاً، واستخدم ADDITIONAL RETRIEVED WEBSITE KNOWLEDGE لإثراء التفاصيل المنشورة على الموقع. لا تخترع أسعاراً أو حقائق غير موجودة في هذه المصادر. أعد الصياغة محادثياً ولا تنسخ الجمل حرفياً."
+      : "Note: Ground answers in ALLOWED FACTS first, and use ADDITIONAL RETRIEVED WEBSITE KNOWLEDGE to add published site detail. Do not invent prices or facts missing from these sources. Paraphrase naturally; do not copy sentences verbatim.";
   const verifiedBlock = JSON.stringify(selective, null, 2);
   let retrieved = retrievedKnowledge.trim();
   if (retrieved && options?.factSelection) {

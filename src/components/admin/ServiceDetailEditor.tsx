@@ -152,7 +152,7 @@ export function ServiceDetailEditor() {
     setStatus(
       describeSaveResult(copyResult, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
     setSaving(false);
@@ -228,14 +228,14 @@ export function ServiceDetailEditor() {
                     rows={3}
                     value={draft[field.key]}
                     onChange={(event) => setDraft({ ...draft, [field.key]: event.target.value })}
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 ) : (
                   <input
                     value={draft[field.key]}
                     onChange={(event) => setDraft({ ...draft, [field.key]: event.target.value })}
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 )}

@@ -5,7 +5,6 @@ export const ADMIN_PERMISSIONS = [
   "services",
   "why",
   "trust",
-  "team",
   "blog",
   "gallery",
   "testimonials",
@@ -20,9 +19,25 @@ export const ADMIN_PERMISSIONS = [
 
 export type AdminPermission = (typeof ADMIN_PERMISSIONS)[number];
 
-export type AdminRoleId = "super_admin" | "admin" | "custom";
+export type AdminRoleId =
+  | "super_admin"
+  | "admin"
+  | "customer_service"
+  | "technical_support"
+  | "assistant_admin"
+  | "custom"
+  | "it_manager";
 
-export const ADMIN_ROLE_IDS: AdminRoleId[] = ["super_admin", "admin", "custom"];
+/** Display order in the role picker (hierarchy roles first, then job titles). */
+export const ADMIN_ROLE_IDS: AdminRoleId[] = [
+  "super_admin",
+  "admin",
+  "customer_service",
+  "technical_support",
+  "assistant_admin",
+  "custom",
+  "it_manager",
+];
 
 /**
  * Account hierarchy. An actor may only create, edit or delete accounts on a
@@ -31,7 +46,11 @@ export const ADMIN_ROLE_IDS: AdminRoleId[] = ["super_admin", "admin", "custom"];
 export const ROLE_LEVEL: Record<AdminRoleId, number> = {
   super_admin: 3,
   admin: 2,
+  customer_service: 1,
+  technical_support: 1,
+  assistant_admin: 1,
   custom: 1,
+  it_manager: 1,
 };
 
 /**
@@ -46,7 +65,6 @@ const RETIRED_ROLE_PERMISSIONS: Record<string, AdminPermission[]> = {
     "services",
     "why",
     "trust",
-    "team",
     "blog",
     "gallery",
     "testimonials",
@@ -77,6 +95,32 @@ export const ROLE_PRESETS: Record<
 > = {
   super_admin: { permissions: [...ADMIN_PERMISSIONS] },
   admin: { permissions: [...ADMIN_PERMISSIONS] },
+  customer_service: {
+    permissions: ["dashboard", "messages", "ai", "faq", "advertisements"],
+  },
+  technical_support: {
+    permissions: ["dashboard", "messages", "ai"],
+  },
+  assistant_admin: {
+    permissions: [
+      "dashboard",
+      "pages",
+      "content",
+      "services",
+      "why",
+      "trust",
+      "blog",
+      "gallery",
+      "testimonials",
+      "faq",
+      "advertisements",
+      "messages",
+      "seo",
+    ],
+  },
+  it_manager: {
+    permissions: ["dashboard", "seo", "settings", "ai", "gallery", "messages"],
+  },
 };
 
 export const DEFAULT_ADMIN_USERS: AdminUser[] = [
@@ -99,11 +143,13 @@ export function permissionsForRole(role: AdminRoleId, custom?: AdminPermission[]
 }
 
 /**
- * Coerce any stored role onto the current set. Retired preset names collapse to `custom`
- * so staff keep their access without the extra role labels.
+ * Coerce any stored role onto the current set. Unknown / retired names collapse to `custom`.
  */
 export function normalizeRole(role: unknown): AdminRoleId {
-  return role === "super_admin" || role === "admin" ? role : "custom";
+  if (typeof role === "string" && (ADMIN_ROLE_IDS as string[]).includes(role)) {
+    return role as AdminRoleId;
+  }
+  return "custom";
 }
 
 /** Access a retired preset would have granted, used only when nothing was stored. */
@@ -149,7 +195,6 @@ export const PERMISSION_ROUTE: Record<AdminPermission, string> = {
   services: "/admin/services",
   why: "/admin/why",
   trust: "/admin/trust",
-  team: "/admin/team",
   blog: "/admin/blog",
   gallery: "/admin/gallery",
   testimonials: "/admin/testimonials",

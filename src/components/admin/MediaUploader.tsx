@@ -93,7 +93,7 @@ export function MediaUploader({
         <p className="text-[0.6rem] tracking-[0.22em] text-navy/40 uppercase">{label}</p>
       ) : null}
       <div className="flex items-center gap-4">
-        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-navy/10 bg-[#faf8f4]">
+        <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-navy/10 bg-sand">
           {preview ? (
             <img src={preview} alt="" className="size-full object-cover" />
           ) : (

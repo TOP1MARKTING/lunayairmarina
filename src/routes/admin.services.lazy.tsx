@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, CircleDashed, Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { DataTable, RowAction, StatusBadge, type Column } from "@/components/admin/DataTable";
+import { AdminStatusToggle, DataTable, RowAction, type Column } from "@/components/admin/DataTable";
 import { Modal, ModalField } from "@/components/admin/Modal";
 import { MediaUploader } from "@/components/admin/MediaUploader";
 import { useLanguage } from "@/lib/i18n";
@@ -90,7 +90,7 @@ function AdminServicesPage() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
   };
@@ -216,22 +216,17 @@ function AdminServicesPage() {
         render: (row) => {
           const active = isServiceActive(row);
           return (
-            <button
-              type="button"
-              onClick={() => void toggleStatus(row)}
-              title={active ? t("admin.actions.setDraft") : t("admin.actions.setActive")}
-              className="rounded-full transition hover:opacity-80"
-            >
-              <StatusBadge
-                label={active ? t("admin.status.active") : t("admin.status.draft")}
-                tone={active ? "active" : "draft"}
-              />
-            </button>
+            <AdminStatusToggle
+              active={active}
+              activeLabel={t("admin.status.active")}
+              draftLabel={t("admin.status.draft")}
+              onChange={() => void toggleStatus(row)}
+            />
           );
         },
       },
     ],
-    [language, rows, t],
+    [language, t],
   );
 
   return (
@@ -252,15 +247,8 @@ function AdminServicesPage() {
         columns={columns}
         rows={rows}
         getRowId={(row) => row.id}
-        actions={(row) => {
-          const active = isServiceActive(row);
-          return (
+        actions={(row) => (
             <>
-              <RowAction
-                icon={active ? CircleDashed : CheckCircle2}
-                label={active ? t("admin.actions.setDraft") : t("admin.actions.setActive")}
-                onClick={() => void toggleStatus(row)}
-              />
               <RowAction
                 icon={Pencil}
                 label={t("admin.actions.edit")}
@@ -273,9 +261,8 @@ function AdminServicesPage() {
                 onClick={() => void persist(rows.filter((item) => item.id !== row.id))}
               />
             </>
-          );
-        }}
-      />
+          )}
+        />
 
       <Modal
         open={Boolean(editing)}

@@ -30,8 +30,8 @@ import {
   type RetrievalPass,
 } from "./websiteSearch";
 
-const MAX_DOCUMENTS = 8;
-const MAX_RETRIEVAL_TOKENS = 3200;
+const MAX_DOCUMENTS = 10;
+const MAX_RETRIEVAL_TOKENS = 4800;
 
 export interface RetrievalBudgetOptions {
   questionFocus: QuestionFocus;

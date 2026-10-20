@@ -5,12 +5,18 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { listStaticPrerenderPaths } from "./staticPrerenderRoutes";
-import { TANSTACK_SERVER_FUNCTION_IDS } from "../src/lib/api/endpoints";
+import { FIREBASE_FUNCTION_NAMES, TANSTACK_SERVER_FUNCTION_IDS } from "../src/lib/api/endpoints";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = resolve(root, "dist");
+const transport = process.env.VITE_API_TRANSPORT?.trim() || "server-fn";
+const functionsBase = (
+  process.env.VITE_FUNCTIONS_BASE_URL?.trim() ||
+  "https://us-central1-lunayairmarina-2d694.cloudfunctions.net"
+).replace(/\/$/, "");
 const apiBase = (
-  process.env.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app"
+  process.env.VITE_API_BASE_URL?.trim() ||
+  (transport === "http" ? "https://www.lunayairmarina.com" : "https://lunayairmarina.vercel.app")
 ).replace(/\/$/, "");
 
 function fail(message: string): never {
@@ -89,31 +95,45 @@ for (const name of assetFiles.filter((n) => n.endsWith(".js"))) {
   bundledJs += readFileSync(resolve(assetsDir, name), "utf8");
 }
 
-if (bundledJs.includes("return`http`") || bundledJs.includes('return"http"')) {
-  fail("static bundle still uses http API transport (Firebase Cloud Functions)");
-}
-ok("API transport is not http / Cloud Functions");
-
-if (!bundledJs.includes("_serverFn")) {
-  fail("static bundle does not reference TanStack server-fn endpoints");
-}
-ok("bundle references /_serverFn remote API");
-
-if (!bundledJs.includes(apiBase.replace(/^https?:\/\//, ""))) {
-  fail(`static bundle does not embed Vercel API base (${apiBase})`);
-}
-ok(`bundle targets Vercel API base ${apiBase}`);
-
-if (bundledJs.includes("cloudfunctions.net")) {
-  fail("static bundle still contains cloudfunctions.net — must use Vercel server-fn only");
-}
-ok("no Firebase Cloud Functions host in bundle");
-
-for (const [name, id] of Object.entries(TANSTACK_SERVER_FUNCTION_IDS)) {
-  if (!bundledJs.includes(id)) {
-    fail(`server function ID missing for ${name}`);
+if (transport === "http") {
+  if (!bundledJs.includes("cloudfunctions.net") && !bundledJs.includes(functionsBase.replace(/^https?:\/\//, ""))) {
+    fail(`static bundle does not embed Cloud Functions host (${functionsBase})`);
   }
+  ok(`bundle targets Firebase Cloud Functions (${functionsBase})`);
+
+  for (const name of Object.values(FIREBASE_FUNCTION_NAMES)) {
+    if (!bundledJs.includes(name)) {
+      fail(`Cloud Function name missing in bundle: ${name}`);
+    }
+  }
+  ok(`all ${Object.keys(FIREBASE_FUNCTION_NAMES).length} Cloud Function names present`);
+
+  if (bundledJs.includes("lunayairmarina.vercel.app/_serverFn")) {
+    fail("http static bundle still hardcodes Vercel /_serverFn");
+  }
+  ok("bundle does not hardcode Vercel server-fn base");
+} else {
+  if (!bundledJs.includes("_serverFn")) {
+    fail("static bundle does not reference TanStack server-fn endpoints");
+  }
+  ok("bundle references /_serverFn remote API");
+
+  if (!bundledJs.includes(apiBase.replace(/^https?:\/\//, ""))) {
+    fail(`static bundle does not embed API base (${apiBase})`);
+  }
+  ok(`bundle targets API base ${apiBase}`);
+
+  if (bundledJs.includes("cloudfunctions.net")) {
+    fail("server-fn static bundle still contains cloudfunctions.net");
+  }
+  ok("no Firebase Cloud Functions host in server-fn bundle");
+
+  for (const [name, id] of Object.entries(TANSTACK_SERVER_FUNCTION_IDS)) {
+    if (!bundledJs.includes(id)) {
+      fail(`server function ID missing for ${name}`);
+    }
+  }
+  ok(`all ${Object.keys(TANSTACK_SERVER_FUNCTION_IDS).length} server-function IDs present`);
 }
-ok(`all ${Object.keys(TANSTACK_SERVER_FUNCTION_IDS).length} server-function IDs present`);
 
 console.log("[verify-static-build] all checks passed");

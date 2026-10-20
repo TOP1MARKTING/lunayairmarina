@@ -7,8 +7,9 @@
  * server-fn chunks (bundled admin SDK crashes with SDK_VERSION errors).
  *
  * Credentials (first match wins):
- * 1. FIREBASE_SERVICE_ACCOUNT_JSON — full service-account JSON string (preferred on Vercel)
+ * 1. FIREBASE_SERVICE_ACCOUNT_JSON — full service-account JSON string (Vercel / local)
  * 2. FIREBASE_SERVICE_ACCOUNT_PATH / GOOGLE_APPLICATION_CREDENTIALS — local file path
+ * 3. Application Default Credentials — Cloud Functions / Cloud Run runtime
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -118,17 +119,23 @@ function loadServiceAccountFromFile(path: string): ServiceAccountJson {
   return parseServiceAccountObject(parsed, "service account file");
 }
 
-function loadServiceAccount(): ServiceAccountJson {
+function isGoogleCloudRuntime(): boolean {
+  return Boolean(
+    process.env.FUNCTION_TARGET?.trim() ||
+      process.env.K_SERVICE?.trim() ||
+      process.env.CLOUD_RUN_SERVICE?.trim() ||
+      process.env.FIREBASE_CONFIG?.trim(),
+  );
+}
+
+function loadServiceAccount(): ServiceAccountJson | null {
   const fromJson = loadServiceAccountFromJsonEnv();
   if (fromJson) return fromJson;
 
   const path = resolveServiceAccountPath();
   if (path) return loadServiceAccountFromFile(path);
 
-  throw new Error(
-    "[firebase-admin] Missing credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON (Vercel) " +
-      "or FIREBASE_SERVICE_ACCOUNT_PATH / GOOGLE_APPLICATION_CREDENTIALS (local file).",
-  );
+  return null;
 }
 
 export async function getFirebaseAdminApp(): Promise<AdminApp> {
@@ -141,13 +148,25 @@ export async function getFirebaseAdminApp(): Promise<AdminApp> {
   }
 
   const serviceAccount = loadServiceAccount();
-  const projectId = resolveProjectId(serviceAccount);
+  if (serviceAccount) {
+    const projectId = resolveProjectId(serviceAccount);
+    adminApp = initializeApp({
+      credential: cert(serviceAccount as Parameters<typeof cert>[0]),
+      projectId,
+    });
+    return adminApp;
+  }
 
-  adminApp = initializeApp({
-    credential: cert(serviceAccount as Parameters<typeof cert>[0]),
-    projectId,
-  });
-  return adminApp;
+  if (isGoogleCloudRuntime()) {
+    adminApp = initializeApp({ projectId: resolveProjectId() });
+    return adminApp;
+  }
+
+  throw new Error(
+    "[firebase-admin] Missing credentials. Set FIREBASE_SERVICE_ACCOUNT_JSON, " +
+      "FIREBASE_SERVICE_ACCOUNT_PATH / GOOGLE_APPLICATION_CREDENTIALS, " +
+      "or run on Cloud Functions with Application Default Credentials.",
+  );
 }
 
 export async function getAdminFirestore(): Promise<AdminFirestore> {
@@ -163,7 +182,8 @@ export function hasFirebaseAdminCredentials(): boolean {
   return Boolean(
     process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim() ||
       process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim() ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim(),
+      process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim() ||
+      isGoogleCloudRuntime(),
   );
 }
 
@@ -225,6 +245,10 @@ export async function assertFirebaseAdminReady(): Promise<{
     ? "FIREBASE_SERVICE_ACCOUNT_JSON"
     : process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim()
       ? "FIREBASE_SERVICE_ACCOUNT_PATH"
-      : "GOOGLE_APPLICATION_CREDENTIALS";
+      : process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim()
+        ? "GOOGLE_APPLICATION_CREDENTIALS"
+        : isGoogleCloudRuntime()
+          ? "APPLICATION_DEFAULT_CREDENTIALS"
+          : "unknown";
   return { projectId, credentialSource: source };
 }

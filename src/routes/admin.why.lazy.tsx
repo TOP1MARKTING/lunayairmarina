@@ -65,7 +65,7 @@ function AdminWhyPage() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
     setBusy(false);
@@ -149,7 +149,7 @@ function AdminWhyPage() {
               const title = asLocalized(item.title);
               const description = asLocalized(item.description);
               return (
-                <div key={index} className="rounded-xl border border-navy/8 bg-[#faf8f4] p-4">
+                <div key={index} className="rounded-xl border border-navy/8 bg-sand p-4">
                   <div className="mb-3 flex justify-end">
                     <button
                       type="button"

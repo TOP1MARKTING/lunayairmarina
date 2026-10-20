@@ -1,6 +1,8 @@
 /**
  * Write dist/.htaccess for Apache/cPanel from VITE_SITE_URL (canonical site origin).
  * Called at the end of the static build — does not commit generated rules to git.
+ *
+ * When VITE_API_TRANSPORT=http (Firebase Cloud Functions), no /_serverFn proxy is needed.
  */
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -13,9 +15,8 @@ function escapeRegexHost(host: string): string {
   return host.replace(/\./g, "\\.");
 }
 
-function generateHtaccess(siteUrl: string, apiOrigin: string): string {
+function generateHtaccess(siteUrl: string, apiOrigin: string | null): string {
   const canonical = siteUrl.replace(/\/$/, "");
-  const vercelApi = apiOrigin.replace(/\/$/, "");
   let hostname: string;
   try {
     hostname = new URL(canonical).hostname;
@@ -34,8 +35,21 @@ function generateHtaccess(siteUrl: string, apiOrigin: string): string {
   RewriteRule ^ ${canonical}%{REQUEST_URI} [R=301,L]`;
   }
 
+  let proxyRule = "";
+  if (apiOrigin) {
+    const vercelApi = apiOrigin.replace(/\/$/, "");
+    if (vercelApi !== canonical) {
+      proxyRule = `
+  # --- Optional proxy for legacy TanStack server-fn clients ---
+  RewriteCond %{REQUEST_URI} ^/_serverFn/ [NC]
+  RewriteRule ^ ${vercelApi}%{REQUEST_URI} [P,L]
+`;
+    }
+  }
+
   return `# LunayAir Marina — Apache/cPanel static hosting (SPA + prerendered public pages)
 # Generated for canonical origin: ${canonical}
+# API: ${apiOrigin ? `proxy ${apiOrigin}` : "Firebase Cloud Functions (direct from browser)"}
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
@@ -45,11 +59,7 @@ function generateHtaccess(siteUrl: string, apiOrigin: string): string {
   RewriteCond %{HTTP_HOST} !^127\\.0\\.0\\.1(:\\d+)?$ [NC]
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 ${apexToWwwRule}
-
-  # --- Proxy TanStack server functions to Vercel (browser keeps ${canonical}/_serverFn/...) ---
-  RewriteCond %{REQUEST_URI} ^/_serverFn/ [NC]
-  RewriteRule ^ ${vercelApi}%{REQUEST_URI} [P,L]
-
+${proxyRule}
   # --- SPA fallback: serve real files/directories first ---
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
@@ -81,10 +91,15 @@ function main() {
     process.env.VITE_SITE_URL?.trim() ||
     process.env.SITE_URL?.trim() ||
     "https://www.lunayairmarina.com";
-  const apiOrigin =
-    process.env.VITE_VERCEL_API_ORIGIN?.trim() ||
-    process.env.VITE_API_BASE_URL?.trim() ||
-    "https://lunayairmarina.vercel.app";
+  const transport = process.env.VITE_API_TRANSPORT?.trim() || "server-fn";
+
+  let apiOrigin: string | null = null;
+  if (transport === "server-fn") {
+    apiOrigin =
+      process.env.VITE_VERCEL_API_ORIGIN?.trim() ||
+      process.env.VITE_API_BASE_URL?.trim() ||
+      "https://lunayairmarina.vercel.app";
+  }
 
   if (!existsSync(dist)) {
     mkdirSync(dist, { recursive: true });
@@ -92,7 +107,10 @@ function main() {
 
   const outPath = resolve(dist, ".htaccess");
   writeFileSync(outPath, generateHtaccess(siteUrl, apiOrigin), "utf8");
-  console.log(`[generate-htaccess] wrote ${outPath} for ${siteUrl.replace(/\/$/, "")} → ${apiOrigin}`);
+  console.log(
+    `[generate-htaccess] wrote ${outPath} for ${siteUrl.replace(/\/$/, "")}` +
+      (apiOrigin ? ` → ${apiOrigin}` : " (Firebase HTTP, no /_serverFn proxy)"),
+  );
 }
 
 main();

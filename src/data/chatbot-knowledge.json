@@ -1,18 +1,33 @@
 {
-  "version": "1.0.0",
-  "updatedAt": "2026-08-26",
+  "version": "1.1.0",
+  "updatedAt": "2026-09-03",
   "company": {
     "en": {
       "name": "Lunayair Marina",
       "tagline": "Yacht Management",
-      "description": "Lunay Air Marina provides professional yacht management solutions for yacht owners — operations, crew, compliance and OPEX clarity from one desk.",
+      "description": "Lunay Air Marina provides professional yacht management solutions for yacht owners in Saudi Arabia and the Gulf region. From planned maintenance and crew oversight to visiting-yacht agency and marina operations, we manage the technical and operational details so owners keep control with clarity.",
       "location": "Based in Jeddah, serving yacht owners across Saudi Arabia and the Gulf.",
-      "regions": ["Jeddah", "Red Sea", "Arabian Gulf", "Saudi Arabia", "Gulf region"]
+      "regions": [
+        "Jeddah",
+        "Red Sea",
+        "Arabian Gulf",
+        "Saudi Arabia",
+        "Gulf region"
+      ],
+      "mission": "To deliver precise, transparent yacht management that protects the asset, the crew and the owner’s time.",
+      "vision": "To be the trusted yacht management partner for owners across Saudi Arabia and the Arabian Gulf.",
+      "story": "Based in Jeddah, lunayairmarina supports yacht owners with integrated management: maintenance planning, crew coordination, compliance, and discreet owner reporting. Our multilingual team includes marine engineers, former captains and operations coordinators — one point of contact for every vessel.",
+      "why": [
+        "Professional marine team: Captains, marine engineers and operations coordinators managing vessels to five-star standards.",
+        "360° yacht management: Technical, operational and financial oversight from planned maintenance to owner reporting.",
+        "Saudi & Gulf coverage: Jeddah-based desk supporting Red Sea and Arabian Gulf owners, visiting yachts and marina needs.",
+        "Fast operations response: A dedicated operations room that follows mechanical alerts, crew changes and logistics around the clock."
+      ]
     },
     "ar": {
       "name": "Lunayair Marina",
       "tagline": "إدارة اليخوت",
-      "description": "توفر lunayairmarina حلول إدارة يخوت متخصصة لملاك اليخوت — التشغيل والطاقم والامتثال ووضوح التكاليف من مكتب واحد.",
+      "description": "توفر lunayairmarina حلول إدارة يخوت احترافية لملاك اليخوت في المملكة العربية السعودية ومنطقة الخليج. من الصيانة المخططة ومتابعة الطاقم إلى وكالة اليخوت الزائرة وتشغيل المارينا، ندير التفاصيل التقنية والتشغيلية ليبقى المالك مسيطراً بوضوح كامل.",
       "location": "مقرنا في جدة، وندعم ملاك اليخوت في المملكة العربية السعودية ومنطقة الخليج.",
       "regions": [
         "جدة",
@@ -20,6 +35,15 @@
         "الخليج العربي",
         "المملكة العربية السعودية",
         "منطقة الخليج"
+      ],
+      "mission": "تقديم إدارة يخوت دقيقة وشفافة تحمي الأصل والطاقم ووقت المالك.",
+      "vision": "أن نكون شريك إدارة اليخوت الموثوق لملاك السعودية والخليج العربي.",
+      "story": "من جدة، تدعم lunayairmarina ملاك اليخوت بإدارة متكاملة: تخطيط الصيانة، تنسيق الطاقم، الامتثال، وتقارير مالك سرية. يضم فريقنا متعدد اللغات مهندسين بحريين وقباطنة سابقين ومنسقي عمليات — نقطة اتصال واحدة لكل يخت.",
+      "why": [
+        "فريق بحري محترف: قباطنة ومهندسون بحريون ومنسقو عمليات يديرون اليخوت بمعايير خمس نجوم.",
+        "إدارة يخوت ٣٦٠ درجة: إشراف فني وتشغيلي ومالي من الصيانة المخططة إلى تقارير المالك.",
+        "تغطية السعودية والخليج: مكتب في جدة يدعم ملاك البحر الأحمر والخليج واليخوت الزائرة واحتياجات المارينا.",
+        "استجابة تشغيلية سريعة: غرفة عمليات تتابع التنبيهات الميكانيكية وتبديل الطاقم واللوجستيات على مدار الساعة."
       ]
     }
   },
@@ -28,44 +52,196 @@
       "id": "yacht-management-360",
       "title": {
         "en": "Complete Yacht & Boat Management (360°)",
-        "ar": "إدارة يخوت ٣٦٠ درجة"
+        "ar": "إدارة اليخوت والقوارب إدارة شاملة (360 درجة)"
       },
       "summary": {
-        "en": "Integrated operational, technical and financial management for yachts and boats, including crew supervision, planned maintenance, budgeting and maritime compliance.",
-        "ar": "إدارة تشغيلية وفنية ومالية متكاملة لليخوت، تشمل إشراف الطاقم والصيانة المخططة والميزانية والامتثال البحري."
+        "en": "From administration and finance to maintenance and operations, we ensure peace of mind with the highest levels of comfort and safety.",
+        "ar": "من الشؤون الإدارية والمالية إلى الصيانة والتشغيل، نضمن لكم راحة البال وأعلى مستويات الرفاهية والأمان."
+      },
+      "intro": {
+        "en": "We deliver an integrated solution for managing your yacht or boat across operational, technical and financial dimensions. From crew supervision and planned maintenance to budgeting and maritime compliance, we take care of everything. You can also choose a modular approach that lets you select only the services you need.",
+        "ar": "نحن نقدم حلاً متكاملاً لإدارة يختك أو قاربك، يغطي جميع الجوانب التشغيلية والفنية والمالية. من الإشراف على الطاقم والصيانة الدورية إلى إدارة الميزانية والامتثال للقوانين البحرية، نحن نتولى كل شيء. يمكنك أيضاً اختيار نهج وحدوي يسمى المنهجية المعيارية (Modular approach) يتيح لك اختيار الخدمات التي تحتاجها فقط."
+      },
+      "detailBody": {
+        "en": "From administration and finance to maintenance and operations, we ensure peace of mind with the highest levels of comfort and safety.",
+        "ar": "من الشؤون الإدارية والمالية إلى الصيانة والتشغيل، نضمن لكم راحة البال وأعلى مستويات الرفاهية والأمان."
+      },
+      "includes": {
+        "en": [
+          "Planned maintenance systems",
+          "Class & flag compliance",
+          "Budgeting and reporting",
+          "24/7 command centre with full voyage logging",
+          "Integrated maintenance planning and class requirements",
+          "Transparent financial oversight with detailed monthly dashboards"
+        ],
+        "ar": [
+          "أنظمة صيانة مخططة",
+          "الامتثال للتصنيف والعَلَم",
+          "إعداد الميزانيات والتقارير",
+          "مركز قيادة يعمل على مدار الساعة وتسجيل كامل للرحلات",
+          "تخطيط متكامل للصيانة ومتطلبات التصنيف البحري",
+          "مراقبة مالية شفافة مع لوحات شهرية مفصلة"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "24/7 command centre with full voyage logging",
+          "Integrated maintenance planning and class requirements",
+          "Transparent financial oversight with detailed monthly dashboards"
+        ],
+        "ar": [
+          "مركز قيادة يعمل على مدار الساعة وتسجيل كامل للرحلات",
+          "تخطيط متكامل للصيانة ومتطلبات التصنيف البحري",
+          "مراقبة مالية شفافة مع لوحات شهرية مفصلة"
+        ]
       }
     },
     {
       "id": "visiting-yacht-agency",
       "title": {
         "en": "Agency Services for Visiting Yachts",
-        "ar": "وكالة اليخوت الزائرة"
+        "ar": "خدمات الوكالة لليخوت الزائرة"
       },
       "summary": {
-        "en": "Support for international yachts arriving in Saudi waters, including clearance, permits, berthing, provisioning, logistics and concierge.",
-        "ar": "دعم اليخوت الدولية القادمة إلى المياه السعودية بالتخليص والتصاريح والرسو والتموين والخدمات اللوجستية والكونسيرج."
+        "en": "We welcome visiting yachts to Saudi shores and simplify every arrival and departure procedure with confidence.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة ونسهّل كل إجراءات الوصول والمغادرة بثقة وسلاسة."
+      },
+      "intro": {
+        "en": "We welcome visiting yachts to the shores of the Kingdom of Saudi Arabia and handle every procedure required for a smooth arrival and comfortable departure. We take care of entry permits, customs clearance and all required documentation, so you can focus on enjoying the beauty of the Red Sea.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة العربية السعودية، ونتولى تسهيل جميع الإجراءات اللازمة لضمان وصول سلس ومغادرة مريحة. نحن نعتني بإنهاء أذونات الدخول، والتخليص الجمركي، وتوفير كافة الأوراق المطلوبة، مما يتيح لك التركيز على الاستمتاع بجمال البحر الأحمر."
+      },
+      "detailBody": {
+        "en": "We welcome visiting yachts to the shores of the Kingdom of Saudi Arabia and handle every procedure required for a smooth arrival and comfortable departure. We take care of entry permits, customs clearance and all required documentation, so you can focus on enjoying the beauty of the Red Sea.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة العربية السعودية، ونتولى تسهيل جميع الإجراءات اللازمة لضمان وصول سلس ومغادرة مريحة. نحن نعتني بإنهاء أذونات الدخول، والتخليص الجمركي، وتوفير كافة الأوراق المطلوبة، مما يتيح لك التركيز على الاستمتاع بجمال البحر الأحمر."
+      },
+      "includes": {
+        "en": [
+          "Clearance & permits",
+          "Berth reservation",
+          "Provisioning and concierge",
+          "Fast entry permits and coordination with port authorities",
+          "Full hospitality and provisioning for guests and crew",
+          "Real-time follow-up on customs and clearance procedures"
+        ],
+        "ar": [
+          "التخليص والتصاريح",
+          "حجز المراسي",
+          "التموين وخدمات الكونسيرج",
+          "تصاريح دخول سريعة والتنسيق مع سلطات الموانئ",
+          "خدمات ضيافة وتموين شاملة للضيوف والطاقم",
+          "متابعة فورية لإجراءات الجمارك والتخليص"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Fast entry permits and coordination with port authorities",
+          "Full hospitality and provisioning for guests and crew",
+          "Real-time follow-up on customs and clearance procedures"
+        ],
+        "ar": [
+          "تصاريح دخول سريعة والتنسيق مع سلطات الموانئ",
+          "خدمات ضيافة وتموين شاملة للضيوف والطاقم",
+          "متابعة فورية لإجراءات الجمارك والتخليص"
+        ]
       }
     },
     {
       "id": "marina-management",
       "title": {
         "en": "Marina & Yacht Club Operations",
-        "ar": "إدارة المارينا"
+        "ar": "إدارة وتشغيل المراسي والنوادي البحرية"
       },
       "summary": {
-        "en": "Professional marina and yacht-club operations for safe, luxury berthing, facility operations, and safety.",
-        "ar": "تشغيل احترافي للمارينا ونوادي اليخوت مع حلول رسو آمنة وتشغيل المرافق والسلامة."
+        "en": "World-class marina and yacht-club operations for safe berthing and a refined member experience.",
+        "ar": "إدارة مراسي ونوادٍ بحرية بمعايير عالمية، لبيئة رسو آمنة وفاخرة وتجربة أعضاء راقية."
+      },
+      "intro": {
+        "en": "We operate marinas to the highest international standards, creating a safe and luxurious berthing environment for yachts and boats. We also manage yacht clubs that offer exclusive leisure and amenities for owners, powered by modern technology that makes them ideal destinations for relaxation and connection.",
+        "ar": "نعمل على إدارة المراسي البحرية بأعلى المعايير العالمية، مما يوفر بيئة آمنة وفاخرة لرسو اليخوت والقوارب. كما ندير النوادي البحرية التي تقدم خدمات ترفيهية ووسائل راحة حصرية لأصحاب اليخوت والقوارب، وباستخدام التكنولوجيا الحديثة مما يجعلها وجهة مثالية للاسترخاء والتواصل."
+      },
+      "detailBody": {
+        "en": "We operate marinas to the highest international standards, creating a safe and luxurious berthing environment for yachts and boats. We also manage yacht clubs that offer exclusive leisure and amenities for owners, powered by modern technology that makes them ideal destinations for relaxation and connection.",
+        "ar": "نعمل على إدارة المراسي البحرية بأعلى المعايير العالمية، مما يوفر بيئة آمنة وفاخرة لرسو اليخوت والقوارب. كما ندير النوادي البحرية التي تقدم خدمات ترفيهية ووسائل راحة حصرية لأصحاب اليخوت والقوارب، وباستخدام التكنولوجيا الحديثة مما يجعلها وجهة مثالية للاسترخاء والتواصل."
+      },
+      "includes": {
+        "en": [
+          "Berth allocation",
+          "Facility operations",
+          "Safety and security",
+          "Digital berth bookings with real-time utility monitoring",
+          "Dock and guest-service teams trained in luxury hospitality",
+          "Club programmes and events that lift operational yield"
+        ],
+        "ar": [
+          "توزيع المراسي",
+          "تشغيل المرافق",
+          "السلامة والأمن",
+          "حجوزات أرصفة رقمية مع مراقبة فورية للاستهلاك",
+          "فرق أرصفة وخدمة عملاء مدربة على الضيافة الراقية",
+          "برامج نادي وفعاليات تزيد من العائد التشغيلي"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Digital berth bookings with real-time utility monitoring",
+          "Dock and guest-service teams trained in luxury hospitality",
+          "Club programmes and events that lift operational yield"
+        ],
+        "ar": [
+          "حجوزات أرصفة رقمية مع مراقبة فورية للاستهلاك",
+          "فرق أرصفة وخدمة عملاء مدربة على الضيافة الراقية",
+          "برامج نادي وفعاليات تزيد من العائد التشغيلي"
+        ]
       }
     },
     {
       "id": "crew-management",
       "title": {
         "en": "Crew Recruitment Services",
-        "ar": "إدارة الطواقم"
+        "ar": "خدمات توظيف الطاقم"
       },
       "summary": {
-        "en": "Recruitment, vetting and management of certified marine professionals including captains, engineers and hospitality crew, with contracts, payroll and training.",
-        "ar": "توظيف وتدقيق وإدارة كوادر بحرية معتمدة من قباطنة ومهندسين وطاقم ضيافة، مع العقود والرواتب والتدريب."
+        "en": "Carefully selected, qualified crew matched to your needs and ready to deliver outstanding service.",
+        "ar": "توظيف طاقم مؤهل بعناية فائقة ليتوافق مع مهاراتك وتفضيلاتك ويقدّم أعلى مستويات الخدمة."
+      },
+      "intro": {
+        "en": "We know the right crew is the foundation of an exceptional experience. Our recruitment team carefully selects candidates to match your unique requirements in skill and character. You can trust that every crew member is qualified, experienced and ready to deliver the highest standard of service.",
+        "ar": "ندرك أن الطاقم المناسب هو أساس التجربة الاستثنائية. يختار فريق التوظيف لدينا المرشحين بعناية فائقة، لضمان توافقهم مع متطلباتك الفريدة، من حيث المهارة والشخصية. يمكنك أن تثق بأن كل فرد في الطاقم لدينا مؤهل، وذو خبرة، ومستعد لتقديم أرقى مستويات الخدمة."
+      },
+      "detailBody": {
+        "en": "We know the right crew is the foundation of an exceptional experience. Our recruitment team carefully selects candidates to match your unique requirements in skill and character. You can trust that every crew member is qualified, experienced and ready to deliver the highest standard of service.",
+        "ar": "ندرك أن الطاقم المناسب هو أساس التجربة الاستثنائية. يختار فريق التوظيف لدينا المرشحين بعناية فائقة، لضمان توافقهم مع متطلباتك الفريدة، من حيث المهارة والشخصية. يمكنك أن تثق بأن كل فرد في الطاقم لدينا مؤهل، وذو خبرة، ومستعد لتقديم أرقى مستويات الخدمة."
+      },
+      "includes": {
+        "en": [
+          "Vetted crew placement",
+          "Payroll & contracts",
+          "Training and certification",
+          "Global talent network with comprehensive background checks",
+          "Behavioural assessments focused on hospitality skills",
+          "Crew rotation plans and continuous training credentials"
+        ],
+        "ar": [
+          "طواقم مدققة",
+          "العقود والرواتب",
+          "التدريب والشهادات",
+          "شبكة مواهب عالمية مع تحقق شامل من الخلفيات",
+          "اختبارات سلوكية وتركيز على مهارات الضيافة",
+          "خطط تدوير للطاقم واعتمادات تدريب مستمر"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Global talent network with comprehensive background checks",
+          "Behavioural assessments focused on hospitality skills",
+          "Crew rotation plans and continuous training credentials"
+        ],
+        "ar": [
+          "شبكة مواهب عالمية مع تحقق شامل من الخلفيات",
+          "اختبارات سلوكية وتركيز على مهارات الضيافة",
+          "خطط تدوير للطاقم واعتمادات تدريب مستمر"
+        ]
       }
     }
   ],

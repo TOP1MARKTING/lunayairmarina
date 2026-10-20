@@ -45,41 +45,54 @@ export interface FactSelectionResult {
 }
 
 const YM360_ORDER = [
-  "ym360_technical_maintenance",
-  "ym360_refit",
-  "ym360_crew_payroll",
-  "ym360_insurance_compliance",
-  "ym360_operational_opex",
-  "ym360_dedicated_manager",
+  "ym360_feature_0",
+  "ym360_feature_1",
+  "ym360_feature_2",
+  "ym360_benefit_0",
+  "ym360_benefit_1",
+  "ym360_benefit_2",
 ] as const;
 
 const SERVICE_FACT_ORDER: Record<string, readonly string[]> = {
   "yacht-management-360": YM360_ORDER,
   "crew-management": [
-    "cm_vetted_placement",
-    "cm_contracts_payroll",
-    "cm_training_certification",
-    "cm_performance_followup",
+    "cm_feature_0",
+    "cm_feature_1",
+    "cm_feature_2",
+    "cm_benefit_0",
+    "cm_benefit_1",
+    "cm_benefit_2",
   ],
   "marina-management": [
-    "mm_berth_bookings",
-    "mm_facility_operations",
-    "mm_safety_security",
-    "mm_member_events",
+    "mm_feature_0",
+    "mm_feature_1",
+    "mm_feature_2",
+    "mm_benefit_0",
+    "mm_benefit_1",
+    "mm_benefit_2",
   ],
   "visiting-yacht-agency": [
-    "vya_clearance",
-    "vya_berth_pilotage",
-    "vya_provisioning",
-    "vya_concierge",
+    "vya_feature_0",
+    "vya_feature_1",
+    "vya_feature_2",
+    "vya_benefit_0",
+    "vya_benefit_1",
+    "vya_benefit_2",
   ],
+};
+
+const SERVICE_VALUE_ORDER: Record<string, readonly string[]> = {
+  "yacht-management-360": ["ym360_value_0", "ym360_value_1", "ym360_value_2"],
+  "crew-management": ["cm_value_0", "cm_value_1", "cm_value_2"],
+  "marina-management": ["mm_value_0", "mm_value_1", "mm_value_2"],
+  "visiting-yacht-agency": ["vya_value_0", "vya_value_1", "vya_value_2"],
 };
 
 const FOCUS_FACT_GROUPS: Record<string, Partial<Record<QuestionFocus, readonly string[]>>> = {
   "yacht-management-360": {
-    operational: ["ym360_operational_opex", "ym360_technical_maintenance", "ym360_dedicated_manager"],
-    owner_value: ["ym360_dedicated_manager", "ym360_operational_opex", "ym360_insurance_compliance"],
-    crew_detail: ["ym360_crew_payroll"],
+    operational: ["ym360_benefit_0", "ym360_feature_0", "ym360_value_0"],
+    owner_value: ["ym360_value_0", "ym360_value_1", "ym360_benefit_2"],
+    crew_detail: ["ym360_value_0"],
     scope_overview: [],
   },
 };
@@ -119,11 +132,27 @@ function buildFactTextMap(serviceId: string, language: ChatLanguage): Map<string
       if (text) map.set(id, text);
     });
   }
+  const valueOrder = SERVICE_VALUE_ORDER[serviceId];
+  const values = service.values?.[lang] ?? [];
+  if (valueOrder) {
+    valueOrder.forEach((id, index) => {
+      const value = values[index];
+      if (value?.title) {
+        map.set(id, `${value.title}: ${value.description}`.trim());
+      }
+    });
+  }
+  if (service.intro?.[lang]) {
+    map.set(`intro_${serviceId}`, service.intro[lang]);
+  }
+  if (service.detailBody?.[lang]) {
+    map.set(`detail_${serviceId}`, service.detailBody[lang]);
+  }
   return map;
 }
 
 function allFactIdsForService(serviceId: string): string[] {
-  return [...(SERVICE_FACT_ORDER[serviceId] ?? [])];
+  return [...(SERVICE_FACT_ORDER[serviceId] ?? []), ...(SERVICE_VALUE_ORDER[serviceId] ?? [])];
 }
 
 function normalize(text: string): string {
@@ -283,10 +312,10 @@ function factEntries(ids: string[], textMap: Map<string, string>): AllowedFact[]
 }
 
 function levelBudget(level: number, focus: QuestionFocus): number {
-  if (level <= 1) return focus === "scope_overview" ? 4 : 3;
-  if (level === 2) return 3;
-  if (level === 3) return 3;
-  return 2;
+  if (level <= 1) return focus === "scope_overview" ? 4 : 4;
+  if (level === 2) return 4;
+  if (level === 3) return 5;
+  return 3;
 }
 
 export interface SelectAllowedFactsInput {
@@ -766,11 +795,18 @@ export function selectAllowedFacts(input: SelectAllowedFactsInput): FactSelectio
     };
   }
 
-  // Default L1 general
+  // Default L1 general — prefer site intro when available for richer first answers
   const themes = L1_THEMES[language].slice(0, 3);
+  const introText = service ? textMap.get(`intro_${serviceId}`) : undefined;
   const allowedFacts: AllowedFact[] = [
     ...(service
-      ? [{ id: `summary_${serviceId}`, text: loc(service.summary, language), kind: "summary" as const }]
+      ? [
+          {
+            id: introText ? `intro_${serviceId}` : `summary_${serviceId}`,
+            text: introText || loc(service.summary, language),
+            kind: "summary" as const,
+          },
+        ]
       : []),
     ...themes.map((t) => ({ ...t, kind: "theme" as const })),
   ];
@@ -778,7 +814,10 @@ export function selectAllowedFacts(input: SelectAllowedFactsInput): FactSelectio
     allowedFacts,
     allowedFactIds: allowedFacts.map((f) => f.id),
     hiddenFactIds: allIds,
-    angleHint: "Keep the answer concise and conversational.",
+    angleHint:
+      language === "ar"
+        ? "قدّم نظرة عامة من معرفة الموقع ثم ادعُ لسؤال أعمق إن لزم."
+        : "Give a site-grounded overview, then invite a deeper question if needed.",
     reason: "L1_default",
     serviceId,
   };

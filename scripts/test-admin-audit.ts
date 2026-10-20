@@ -204,7 +204,6 @@ const CMS_CLIENT_ACTIONS: Array<{ area: string; action: string; collection: stri
   { area: "Services", action: "إضافة/تعديل/حذف خدمة", collection: "services" },
   { area: "Why", action: "حفظ أسباب الثقة", collection: "why/main" },
   { area: "Trust", action: "حفظ شرائح الثقة", collection: "trust/main" },
-  { area: "Team", action: "إضافة/حذف عضو", collection: "team" },
   { area: "Blog", action: "إضافة/حذف مقال", collection: "blog" },
   { area: "Gallery", action: "رفع/حذف صورة", collection: "gallery, media" },
   { area: "Testimonials", action: "إضافة/حذف شهادة", collection: "testimonials" },

@@ -135,7 +135,7 @@ function AdminTrustPage() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
     setBusy(false);
@@ -219,7 +219,7 @@ function AdminTrustPage() {
             <button
               type="button"
               onClick={addSlot}
-              className="relative z-10 inline-flex items-center gap-2 rounded-full border border-navy/15 bg-white px-4 py-2 text-xs uppercase tracking-[0.16em] text-navy transition-colors hover:border-navy/40 hover:bg-[#faf8f4]"
+              className="relative z-10 inline-flex items-center gap-2 rounded-full border border-navy/15 bg-white px-4 py-2 text-xs uppercase tracking-[0.16em] text-navy transition-colors hover:border-navy/40 hover:bg-sand"
             >
               <Plus className="size-3.5" strokeWidth={1.75} />
               {t("admin.actions.add")}
@@ -236,7 +236,7 @@ function AdminTrustPage() {
                   className={`rounded-xl border p-4 transition-colors ${
                     highlightId === slot.id
                       ? "border-gold bg-gold/10"
-                      : "border-navy/8 bg-[#faf8f4]"
+                      : "border-navy/8 bg-sand"
                   }`}
                 >
                   <div className="mb-3 flex items-center justify-between gap-3">

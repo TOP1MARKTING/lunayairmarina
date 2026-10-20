@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ModalField } from "@/components/admin/Modal";
-import { MediaUploader } from "@/components/admin/MediaUploader";
 import { useLanguage } from "@/lib/i18n";
 import { changeOwnAdminPassword } from "@/services/adminUsersService";
 import { loadCmsStore } from "@/lib/cms-store";
@@ -27,7 +26,6 @@ function AdminSettingsPage() {
   }, []);
 
   const [settings, setSettings] = useState(initial.settings);
-  const [logoUrl, setLogoUrl] = useState(initial.logoUrl);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -37,11 +35,12 @@ function AdminSettingsPage() {
 
   const save = async () => {
     setBusy(true);
-    const result = await saveSettings(settings, logoUrl || undefined);
+    // Keep existing brand logo — upload UI removed from settings.
+    const result = await saveSettings(settings, initial.logoUrl || undefined);
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
     setBusy(false);
@@ -78,14 +77,6 @@ function AdminSettingsPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section className="rounded-2xl border border-navy/8 bg-white p-6 shadow-sm">
           <h2 className="font-display text-lg text-navy">{t("admin.settings.general")}</h2>
-          <div className="mt-6">
-            <MediaUploader
-              label={t("admin.settings.logo")}
-              value={logoUrl}
-              pathPrefix="images/brand"
-              onChange={setLogoUrl}
-            />
-          </div>
           <div className="mt-6 flex flex-col gap-5">
             <ModalField
               label={t("admin.settings.companyName")}

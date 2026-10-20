@@ -1,14 +1,21 @@
 {
   "name": "Lunayair Marina",
-  "nameVariants": ["lunayairmarina", "lunay air marina", "lunayair marina"],
-  "tagline": { "en": "Yacht Management", "ar": "إدارة اليخوت" },
+  "nameVariants": [
+    "lunayairmarina",
+    "lunay air marina",
+    "lunayair marina"
+  ],
+  "tagline": {
+    "en": "Yacht Management",
+    "ar": "إدارة اليخوت"
+  },
   "founded": 2014,
   "description": {
-    "en": "Lunayair Marina provides professional yacht management solutions for yacht owners — operations, crew, compliance and OPEX clarity from one desk.",
-    "ar": "توفر lunayairmarina حلول إدارة يخوت متخصصة لملاك اليخوت — التشغيل والطاقم والامتثال ووضوح التكاليف من مكتب واحد."
+    "en": "Lunay Air Marina provides professional yacht management solutions for yacht owners in Saudi Arabia and the Gulf region. From planned maintenance and crew oversight to visiting-yacht agency and marina operations, we manage the technical and operational details so owners keep control with clarity.",
+    "ar": "توفر lunayairmarina حلول إدارة يخوت احترافية لملاك اليخوت في المملكة العربية السعودية ومنطقة الخليج. من الصيانة المخططة ومتابعة الطاقم إلى وكالة اليخوت الزائرة وتشغيل المارينا، ندير التفاصيل التقنية والتشغيلية ليبقى المالك مسيطراً بوضوح كامل."
   },
   "mission": {
-    "en": "To deliver precise, transparent yacht management that protects the asset, the crew and the owner's time.",
+    "en": "To deliver precise, transparent yacht management that protects the asset, the crew and the owner’s time.",
     "ar": "تقديم إدارة يخوت دقيقة وشفافة تحمي الأصل والطاقم ووقت المالك."
   },
   "vision": {

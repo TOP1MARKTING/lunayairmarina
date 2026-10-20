@@ -97,30 +97,22 @@ function mergeById<T extends { id: string; order?: number }>(cms: T[], remote: T
   );
 }
 
-/**
- * Gallery is a full snapshot from admin (including deletions).
- * Once managed, never re-introduce remote-only ids that were removed in CMS.
- */
-function mergeGallery(cms: GalleryContent[], remote: GalleryContent[]): GalleryContent[] {
-  if (isCollectionManaged("gallery")) return cms;
-  return mergeById(cms, remote);
-}
-
-/** Firebase is source of truth until admin manages the collection; then CMS wins (incl. deletes). */
-function preferManagedCollection<T extends { id: string }>(
+/** Firebase is the source of truth. Local CMS is only a cache / offline display fallback. */
+function preferRemoteCollection<T extends { id: string }>(
   local: T[],
   remote: T[],
-  name: "team" | "faq" | "testimonials" | "blog" | "services" | "fleet" | "advertisements",
+  managed = false,
 ): T[] {
-  if (isCollectionManaged(name)) return local;
-  if (remote.length === 0) return local;
-  if (local.length === 0) return remote;
-  const map = new Map<string, T>();
-  for (const item of remote) map.set(item.id, item);
-  for (const item of local) {
-    if (!map.has(item.id)) map.set(item.id, item);
-  }
-  return Array.from(map.values());
+  if (managed) return remote;
+  if (remote.length > 0) return remote;
+  return local;
+}
+
+function preferRemoteGallery(local: GalleryContent[], remote: GalleryContent[]): GalleryContent[] {
+  // Managed gallery is a full Firebase snapshot (including intentional empties).
+  if (isCollectionManaged("gallery")) return remote;
+  if (remote.length > 0) return remote;
+  return local;
 }
 
 function emptyBundle(): SiteBundle {
@@ -252,7 +244,7 @@ async function fetchBundleFromFirebase(): Promise<SiteBundle> {
   }
 }
 
-/** CMS local store wins over Firebase (Super Admin edits). */
+/** CMS local store is a cache; Firebase wins when present. */
 function looksLikeI18nKey(value: string | undefined): boolean {
   if (!value?.trim()) return true;
   return /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/i.test(value.trim());
@@ -281,15 +273,15 @@ function mergeCmsOverFirebase(remote: SiteBundle): SiteBundle {
   const arLocaleDict = arLocale as Record<string, unknown>;
 
   let copy =
-    cms.copy || remote.copy
+    remote.copy || cms.copy
       ? {
           en: repairWrongLanguageCopy(
-            deepMergeCopy(remote.copy?.en, cms.copy?.en),
+            deepMergeCopy(cms.copy?.en, remote.copy?.en),
             enLocaleDict,
             arLocaleDict,
           ),
           ar: repairWrongLanguageCopy(
-            deepMergeCopy(remote.copy?.ar, cms.copy?.ar),
+            deepMergeCopy(cms.copy?.ar, remote.copy?.ar),
             arLocaleDict,
             enLocaleDict,
           ),
@@ -318,7 +310,7 @@ function mergeCmsOverFirebase(remote: SiteBundle): SiteBundle {
   }
 
   const homepage =
-    sanitizeHomepageForBundle(cms.homepage) ?? sanitizeHomepageForBundle(remote.homepage);
+    sanitizeHomepageForBundle(remote.homepage) ?? sanitizeHomepageForBundle(cms.homepage);
 
   // Drop corrupted homepage from local CMS so it stops overriding locales.
   if (cms.homepage && !sanitizeHomepageForBundle(cms.homepage)) {
@@ -326,24 +318,28 @@ function mergeCmsOverFirebase(remote: SiteBundle): SiteBundle {
   }
 
   return {
-    settings: cms.settings ?? remote.settings,
+    settings: remote.settings ?? cms.settings,
     homepage,
-    about: cms.about ?? remote.about,
-    why: cms.why ?? remote.why,
-    trust: cms.trust ?? remote.trust,
-    services: preferManagedCollection(cms.services, remote.services, "services"),
-    fleet: preferManagedCollection(cms.fleet, remote.fleet, "fleet"),
-    team: preferManagedCollection(cms.team, remote.team, "team"),
-    testimonials: preferManagedCollection(cms.testimonials, remote.testimonials, "testimonials"),
-    advertisements: preferManagedCollection(
+    about: remote.about ?? cms.about,
+    why: remote.why ?? cms.why,
+    trust: remote.trust ?? cms.trust,
+    services: preferRemoteCollection(cms.services, remote.services, isCollectionManaged("services")),
+    fleet: preferRemoteCollection(cms.fleet, remote.fleet, isCollectionManaged("fleet")),
+    team: preferRemoteCollection(cms.team, remote.team, isCollectionManaged("team")),
+    testimonials: preferRemoteCollection(
+      cms.testimonials,
+      remote.testimonials,
+      isCollectionManaged("testimonials"),
+    ),
+    advertisements: preferRemoteCollection(
       cms.advertisements,
       remote.advertisements,
-      "advertisements",
+      isCollectionManaged("advertisements"),
     ),
     locations: remote.locations,
-    blog: preferManagedCollection(cms.blog, remote.blog, "blog"),
-    gallery: mergeGallery(cms.gallery, remote.gallery),
-    faq: preferManagedCollection(cms.faq, remote.faq, "faq"),
+    blog: preferRemoteCollection(cms.blog, remote.blog, isCollectionManaged("blog")),
+    gallery: preferRemoteGallery(cms.gallery, remote.gallery),
+    faq: preferRemoteCollection(cms.faq, remote.faq, isCollectionManaged("faq")),
     copy,
     fetchedAt: Date.now(),
   };

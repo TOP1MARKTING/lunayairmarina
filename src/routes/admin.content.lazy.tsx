@@ -1,7 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { PageCopyEditor } from "@/components/admin/PageCopyEditor";
-import { ServiceDetailEditor } from "@/components/admin/ServiceDetailEditor";
 import { useLanguage } from "@/lib/i18n";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Shield } from "lucide-react";
@@ -29,7 +28,6 @@ function ContentPage() {
     <AdminLayout title={t("admin.content.title")}>
       <p className="mb-6 max-w-2xl text-sm text-navy/55">{t("admin.content.subtitle")}</p>
       <PageCopyEditor />
-      <ServiceDetailEditor />
     </AdminLayout>
   );
 }

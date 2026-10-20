@@ -1,13 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { createLazyFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { motion } from "motion/react";
 import { ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { LanguageSwitcher } from "@/components/shared/LanguageSwitcher";
 import { Logo } from "@/components/shared/Logo";
 import { sendAdminPasswordReset } from "@/services/adminUsersService";
-import adminBg from "@/assets/admin/admin-login-bg.jpg";
+import adminBg from "@/assets/admin/admin-login-bg.webp";
 
 export const Route = createLazyFileRoute("/admin/login")({
   component: AdminLoginPage,
@@ -61,26 +60,26 @@ function AdminLoginPage() {
 
   return (
     <div className="relative grid min-h-dvh place-items-center overflow-x-clip px-4 py-12 sm:px-5 sm:py-16">
-      <div className="absolute inset-0">
-        <img src={adminBg} alt="" aria-hidden className="size-full object-cover" />
-        <div className="absolute inset-0 bg-navy/85" />
+      <div
+        className="absolute inset-0 bg-navy bg-cover bg-center"
+        style={{ backgroundImage: `url(${adminBg})` }}
+        aria-hidden
+      >
+        <div className="absolute inset-0 bg-navy/88" />
       </div>
 
       <div className="absolute top-[max(1rem,env(safe-area-inset-top))] inset-inline-end-4 z-10 sm:inset-inline-end-6">
         <LanguageSwitcher tone="light" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 26, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-card relative z-10 w-full max-w-md rounded-xl p-6 sm:p-10"
-      >
+      <div className="relative z-10 w-full max-w-md rounded-xl border border-white/12 bg-[#0c1a2e]/92 p-6 shadow-[0_24px_48px_rgba(0,0,0,0.35)] sm:p-10">
         <div className="flex justify-center">
-          <Logo tone="light" align="center" className="h-44 w-56 sm:h-52 sm:w-64" />
+          <div className="rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-black/5">
+            <Logo tone="dark" align="center" className="h-28 w-40 sm:h-32 sm:w-44" />
+          </div>
         </div>
 
-        <h1 className="mt-8 text-center text-2xl text-navy-foreground">{t("admin.portal")}</h1>
+        <h1 className="mt-6 text-center text-2xl text-navy-foreground">{t("admin.portal")}</h1>
         <p className="mt-2 text-center text-xs tracking-[0.18em] text-gold uppercase">
           {t("brand.name")}
         </p>
@@ -137,14 +136,13 @@ function AdminLoginPage() {
             </p>
           ) : null}
 
-          <motion.button
+          <button
             type="submit"
             disabled={busy || resetBusy}
-            whileTap={{ scale: 0.98 }}
-            className="mt-2 border border-gold bg-gold px-8 py-4 text-[0.7rem] tracking-[0.22em] text-navy uppercase transition-all duration-500 hover:bg-transparent hover:text-gold disabled:opacity-60"
+            className="mt-2 border border-gold bg-gold px-8 py-4 text-[0.7rem] tracking-[0.22em] text-navy uppercase transition-colors duration-200 hover:bg-transparent hover:text-gold disabled:opacity-60 active:scale-[0.99]"
           >
             {busy ? t("common.loading") : t("admin.login")}
-          </motion.button>
+          </button>
         </form>
 
         <Link
@@ -154,7 +152,7 @@ function AdminLoginPage() {
           <ArrowLeft className="size-3.5 rtl:rotate-180" strokeWidth={1.5} />
           {t("admin.backToSite")}
         </Link>
-      </motion.div>
+      </div>
     </div>
   );
 }

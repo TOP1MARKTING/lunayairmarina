@@ -1,11 +1,13 @@
 /**
  * Static Apache/cPanel production build.
  *
- * Architecture:
- *   cPanel (static dist/) → Vercel free tier (TanStack server functions) → Firebase Spark + Gemini
+ * Architecture (default — works today):
+ *   cPanel (static dist/) → Vercel server-fn → OpenAI + Firestore
  *
- * Set VITE_SITE_URL to the client's cPanel canonical origin before building.
- * Set VITE_API_BASE_URL to the Vercel backend origin (defaults to lunayairmarina.vercel.app).
+ * Optional Firebase CF:
+ *   VITE_API_TRANSPORT=http (requires Blaze + deployed functions)
+ *
+ * Set VITE_SITE_URL to the cPanel canonical origin before building.
  */
 import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -14,43 +16,58 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-const apiBase = (
-  process.env.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app"
-).replace(/\/$/, "");
-
-process.env.VITE_API_TRANSPORT = process.env.VITE_API_TRANSPORT?.trim() || "server-fn";
+const transport = process.env.VITE_API_TRANSPORT?.trim() || "server-fn";
+process.env.VITE_API_TRANSPORT = transport;
 process.env.VITE_STATIC_HOSTING = "true";
-process.env.VITE_TSS_SERVER_FN_BASE = `${apiBase}/_serverFn/`;
 
-if (!process.env.VITE_API_BASE_URL?.trim()) {
-  process.env.VITE_API_BASE_URL = apiBase;
-}
 if (!process.env.VITE_SITE_URL?.trim()) {
   process.env.VITE_SITE_URL = "https://www.lunayairmarina.com";
 }
 
-// Cloud Functions transport is not used on Spark; do not inject a CF base URL.
-delete process.env.VITE_FUNCTIONS_BASE_URL;
+const functionsBase = (
+  process.env.VITE_FUNCTIONS_BASE_URL?.trim() ||
+  "https://us-central1-lunayairmarina-2d694.cloudfunctions.net"
+).replace(/\/$/, "");
+
+if (transport === "http") {
+  process.env.VITE_FUNCTIONS_BASE_URL = functionsBase;
+  if (!process.env.VITE_API_BASE_URL?.trim()) {
+    process.env.VITE_API_BASE_URL = process.env.VITE_SITE_URL.replace(/\/$/, "");
+  }
+  delete process.env.VITE_TSS_SERVER_FN_BASE;
+} else {
+  const apiBase = (
+    process.env.VITE_API_BASE_URL?.trim() || "https://lunayairmarina.vercel.app"
+  ).replace(/\/$/, "");
+  process.env.VITE_API_BASE_URL = apiBase;
+  process.env.VITE_TSS_SERVER_FN_BASE = `${apiBase}/_serverFn/`;
+  if (!process.env.VITE_VERCEL_API_ORIGIN?.trim()) {
+    process.env.VITE_VERCEL_API_ORIGIN = apiBase;
+  }
+  delete process.env.VITE_FUNCTIONS_BASE_URL;
+}
 
 console.log("[build:static] VITE_API_TRANSPORT=", process.env.VITE_API_TRANSPORT);
 console.log("[build:static] VITE_API_BASE_URL=", process.env.VITE_API_BASE_URL);
-console.log("[build:static] VITE_TSS_SERVER_FN_BASE=", process.env.VITE_TSS_SERVER_FN_BASE);
+console.log("[build:static] VITE_FUNCTIONS_BASE_URL=", process.env.VITE_FUNCTIONS_BASE_URL ?? "(unset)");
+console.log("[build:static] VITE_TSS_SERVER_FN_BASE=", process.env.VITE_TSS_SERVER_FN_BASE ?? "(unset)");
 console.log("[build:static] VITE_SITE_URL=", process.env.VITE_SITE_URL);
 
-if (process.env.VITE_API_TRANSPORT === "http") {
-  console.warn(
-    "[build:static] WARNING: http transport targets Firebase Cloud Functions and requires Blaze. " +
-      "Use server-fn (default) for cPanel + Vercel free tier.",
+if (transport === "http") {
+  console.log(
+    "[build:static] Firebase Cloud Functions transport — requires Blaze + deployed functions.",
   );
 }
 
 const ssrAssets = resolve(root, ".output/public/assets");
-if (!existsSync(ssrAssets)) {
+if (!existsSync(ssrAssets) && transport === "server-fn") {
   console.log("[build:static] SSR build missing — running npm run build to verify server-fn IDs…");
   execSync("npm run build", { cwd: root, stdio: "inherit" });
 }
 
-execSync("tsx scripts/verify-server-fn-ids.ts", { cwd: root, stdio: "inherit" });
+if (transport === "server-fn") {
+  execSync("tsx scripts/verify-server-fn-ids.ts", { cwd: root, stdio: "inherit" });
+}
 execSync("tsx scripts/generateSitemap.ts", { cwd: root, stdio: "inherit" });
 execSync("vite build --config vite.config.static.ts", { cwd: root, stdio: "inherit" });
 execSync("tsx scripts/finalize-static-dist.ts", { cwd: root, stdio: "inherit" });

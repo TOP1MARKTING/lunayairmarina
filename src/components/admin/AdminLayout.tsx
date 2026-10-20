@@ -58,7 +58,7 @@ export function AdminLayout({ title, children }: AdminLayoutProps) {
   }, [open]);
 
   return (
-    <div className="admin-shell admin-hide-scrollbar min-h-dvh overflow-x-clip bg-[#faf8f4]">
+    <div className="admin-shell admin-hide-scrollbar min-h-dvh overflow-x-clip">
       <AdminSidebar open={open} onClose={() => setOpen(false)} />
       <div className="min-w-0 lg:ps-72">
         <AdminHeader title={title} onMenu={() => setOpen(true)} />

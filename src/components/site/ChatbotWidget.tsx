@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Bot, Loader2, SendHorizontal, X } from "lucide-react";
+import { ChevronDown, Loader2, SendHorizontal, X } from "lucide-react";
 import { useRouterState } from "@tanstack/react-router";
 import { sendChatbotMessage, submitChatbotContact } from "@/lib/api/chatbot";
 import { useLanguage } from "@/lib/i18n";
@@ -24,6 +24,45 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+/** Chatbot-only captain logo — do not reuse on the rest of the site. */
+const CAPTAIN_AVATAR_SRC = "/images/brand/lunayair_chatbot_captain_robot_cap_only.webp";
+
+function CaptainAvatar({
+  className,
+  ring = true,
+  onlineDot = false,
+}: {
+  className?: string;
+  ring?: boolean;
+  onlineDot?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-[#0b1c33] via-[#132a4a] to-[#0a1628]",
+        ring && "ring-2 ring-gold/55 ring-offset-2 ring-offset-navy/80",
+        className,
+      )}
+    >
+      <img
+        src={CAPTAIN_AVATAR_SRC}
+        alt=""
+        width={96}
+        height={96}
+        className="size-full object-cover object-[center_18%]"
+        draggable={false}
+        decoding="async"
+      />
+      {onlineDot ? (
+        <span
+          className="absolute end-0.5 bottom-0.5 size-2.5 rounded-full border-2 border-navy bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+          aria-hidden
+        />
+      ) : null}
+    </div>
+  );
+}
 
 interface ChatMessage {
   id: string;
@@ -135,6 +174,46 @@ async function playMessagePopSound(): Promise<boolean> {
   }
 }
 
+function deriveFollowUpReplies(
+  messages: ChatMessage[],
+  t: (key: string) => string,
+): QuickReply[] {
+  const last = messages[messages.length - 1];
+  if (!last || last.role !== "assistant" || last.error) return [];
+
+  const content = last.content;
+  const hasWhatsApp = /wa\.me|api\.whatsapp\.com/i.test(content);
+  const mentionsPrice = /(?:سعر|بكم|تكلف|باقة|price|cost|quote|package|pricing)/i.test(content);
+
+  const chips: QuickReply[] = [
+    {
+      label: t("chatbot.followUp.moreDetails"),
+      message: t("chatbot.followUp.moreDetailsMessage"),
+    },
+  ];
+
+  if (!mentionsPrice) {
+    chips.push({
+      label: t("chatbot.followUp.pricing"),
+      message: t("chatbot.followUp.pricingMessage"),
+    });
+  }
+
+  if (!hasWhatsApp) {
+    chips.push({
+      label: t("chatbot.followUp.whatsapp"),
+      message: t("chatbot.followUp.whatsappMessage"),
+    });
+  }
+
+  chips.push({
+    label: t("chatbot.followUp.book"),
+    message: t("chatbot.followUp.bookMessage"),
+  });
+
+  return chips.slice(0, 3);
+}
+
 export function ChatbotWidget() {
   const { t, tv, language, isRTL } = useLanguage();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
@@ -169,6 +248,8 @@ export function ChatbotWidget() {
   const [contactSaving, setContactSaving] = useState(false);
   const [contactError, setContactError] = useState("");
   const [contactWarning, setContactWarning] = useState("");
+  const [showScrollDown, setShowScrollDown] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     void (async () => {
@@ -186,8 +267,10 @@ export function ChatbotWidget() {
   }, []);
 
   const quickReplies = tv<QuickReply[]>("chatbot.quickReplies");
+  const followUpReplies = deriveFollowUpReplies(messages, t);
   const teaserMessages = tv<string[]>("chatbot.teasers") ?? [];
   const showQuickReplies = contactSaved && messages.length === 0 && !sending;
+  const showFollowUpChips = contactSaved && followUpReplies.length > 0 && !sending;
   const showTeasers =
     isHome && !open && !teaserDismissed && teasersVisible && teaserMessages.length > 0;
   // After teaser bubbles hide on home, keep "2" on the FAB until chat opens (this visit).
@@ -310,6 +393,7 @@ export function ChatbotWidget() {
     if (stickToBottomRef.current) {
       scrollToBottom(messages.length <= 1 ? "auto" : "smooth");
     }
+    window.requestAnimationFrame(() => handleScroll());
   }, [messages, sending, scrollToBottom]);
 
   const handleScroll = () => {
@@ -318,6 +402,7 @@ export function ChatbotWidget() {
     const distanceFromBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight;
     stickToBottomRef.current = distanceFromBottom < 72;
+    setShowScrollDown(distanceFromBottom >= 96);
   };
 
   const resolveErrorMessage = useCallback(
@@ -369,6 +454,11 @@ export function ChatbotWidget() {
               timestamp: new Date(),
             },
           ]);
+          if (!open) {
+            setUnreadCount((count) => count + 1);
+          } else {
+            void playMessagePopSound();
+          }
         } else {
           setMessages((prev) => [
             ...prev,
@@ -396,7 +486,7 @@ export function ChatbotWidget() {
         setSending(false);
       }
     },
-    [chatReady, contactSaved, language, resolveErrorMessage, sending, sessionId, t],
+    [chatReady, contactSaved, language, open, resolveErrorMessage, sending, sessionId, t],
   );
 
   const handleSubmit = (event?: React.FormEvent) => {
@@ -486,6 +576,7 @@ export function ChatbotWidget() {
     setTeaserDismissed(true);
     setTeasersVisible(false);
     setBadgeCleared(true);
+    setUnreadCount(0);
     setOpen(true);
   };
 
@@ -549,46 +640,43 @@ export function ChatbotWidget() {
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              "flex flex-col overflow-hidden rounded-[1.5rem] border border-navy/10 bg-[#f7f5f1] shadow-luxe",
+              "flex flex-col overflow-hidden rounded-[1.65rem] border border-white/10 bg-[#f3f6fa] shadow-[0_28px_64px_rgba(8,18,36,0.38),0_0_0_1px_rgba(212,175,55,0.12)]",
               // Desktop: slender tall card beside the FAB
-              "sm:w-[min(100vw-2.5rem,22.5rem)]",
+              "sm:w-[min(100vw-2.5rem,23rem)]",
               // Mobile: narrower centered column, stretch tall between nav and FAB
-              "max-sm:fixed max-sm:left-1/2 max-sm:z-50 max-sm:w-[min(20rem,calc(100vw-3.5rem))] max-sm:-translate-x-1/2 max-sm:h-auto",
+              "max-sm:fixed max-sm:left-1/2 max-sm:z-50 max-sm:w-[min(20.5rem,calc(100vw-3.5rem))] max-sm:-translate-x-1/2 max-sm:h-auto",
               isHome
-                ? "max-sm:top-[calc(3.35rem+env(safe-area-inset-top))] max-sm:bottom-[calc(3.25rem+env(safe-area-inset-bottom))] sm:h-[min(40rem,calc(100dvh-8.5rem))]"
-                : "max-sm:top-[calc(3.35rem+env(safe-area-inset-top))] max-sm:bottom-[calc(3.65rem+env(safe-area-inset-bottom))] sm:h-[min(40rem,calc(100dvh-7rem))]",
+                ? "max-sm:top-[calc(3.35rem+env(safe-area-inset-top))] max-sm:bottom-[calc(3.25rem+env(safe-area-inset-bottom))] sm:h-[min(42rem,calc(100dvh-8.5rem))]"
+                : "max-sm:top-[calc(3.35rem+env(safe-area-inset-top))] max-sm:bottom-[calc(3.65rem+env(safe-area-inset-bottom))] sm:h-[min(42rem,calc(100dvh-7rem))]",
             )}
           >
-            <header className="relative shrink-0 overflow-hidden bg-navy px-3.5 pb-3 pt-3 text-navy-foreground sm:px-4 sm:pb-3.5 sm:pt-3.5">
+            <header className="relative shrink-0 overflow-hidden bg-navy px-3.5 pb-3.5 pt-3.5 text-navy-foreground sm:px-4 sm:pb-4 sm:pt-4">
               <div
-                className="pointer-events-none absolute inset-0 opacity-40"
+                className="pointer-events-none absolute inset-0"
                 style={{
                   background:
-                    "radial-gradient(ellipse 80% 120% at 100% 0%, color-mix(in oklab, var(--gold) 35%, transparent), transparent 55%), linear-gradient(165deg, color-mix(in oklab, var(--ocean) 55%, var(--navy)), var(--navy))",
+                    "radial-gradient(ellipse 90% 140% at 0% 0%, color-mix(in oklab, var(--gold) 28%, transparent), transparent 52%), radial-gradient(ellipse 70% 100% at 100% 120%, color-mix(in oklab, var(--ocean) 45%, transparent), transparent 50%), linear-gradient(155deg, #0c1f38 0%, var(--navy) 48%, #071221 100%)",
                 }}
                 aria-hidden
               />
-              <div className={cn("relative flex items-center gap-2.5 sm:gap-3", isRTL && "pe-11 sm:pe-12")}>
-                <div className="relative size-10 shrink-0 overflow-hidden rounded-full border-2 border-gold/50 bg-[#f4f1ea] shadow-[0_0_0_1px_rgba(255,255,255,0.08)] sm:size-11">
-                  <img
-                    src="/images/brand/chatbot-robot-avatar.png"
-                    alt=""
-                    width={44}
-                    height={44}
-                    className="size-full object-cover object-center"
-                    draggable={false}
-                  />
-                  <span
-                    className="absolute end-0 bottom-0 size-2.5 rounded-full border-2 border-navy bg-emerald-400"
-                    aria-hidden
-                  />
-                </div>
+              <div
+                className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"
+                aria-hidden
+              />
+              <div className={cn("relative flex items-center gap-3 sm:gap-3.5", isRTL && "pe-11 sm:pe-12")}>
+                <CaptainAvatar className="size-12 sm:size-[3.25rem]" onlineDot />
                 <div className="min-w-0 flex-1">
-                  <h2 id={titleId} className="truncate font-display text-[0.98rem] leading-tight tracking-wide sm:text-[1.05rem]">
+                  <h2
+                    id={titleId}
+                    className="truncate font-display text-[1.02rem] leading-tight tracking-wide text-white sm:text-[1.12rem]"
+                  >
                     {t("chatbot.title")}
                   </h2>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[0.68rem] text-gold/90 sm:text-[0.7rem]">
-                    <span className="size-1.5 rounded-full bg-emerald-400" aria-hidden />
+                  <p className="mt-1 flex items-center gap-1.5 text-[0.7rem] text-gold/95 sm:text-[0.72rem]">
+                    <span className="relative flex size-1.5">
+                      <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/70" aria-hidden />
+                      <span className="relative size-1.5 rounded-full bg-emerald-400" aria-hidden />
+                    </span>
                     {t("chatbot.statusOnline")}
                   </p>
                 </div>
@@ -600,44 +688,51 @@ export function ChatbotWidget() {
                   }}
                   aria-label={t("common.close")}
                   className={cn(
-                    "grid size-8 shrink-0 place-items-center rounded-full border border-white/12 bg-white/5 text-white/90 transition hover:border-gold/50 hover:bg-white/10 hover:text-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:size-9",
+                    "grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/8 text-white/90 transition hover:border-gold/55 hover:bg-white/12 hover:text-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:size-9",
                     isRTL && "absolute end-0 top-1/2 -translate-y-1/2",
                   )}
                 >
                   <X className="size-4" strokeWidth={1.75} />
                 </button>
               </div>
-              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/50 to-transparent" aria-hidden />
+              <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold/45 to-transparent" aria-hidden />
             </header>
 
             {!contactSaved ? (
               onboardingStep === "welcome" ? (
-                <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-5">
-                  <p className="text-center text-sm leading-relaxed text-navy/80 whitespace-pre-line">
+                <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-5 py-6">
+                  <CaptainAvatar className="size-20 ring-offset-[#f3f6fa] sm:size-24" ring />
+                  <p className="mt-4 text-center font-display text-[1.05rem] text-navy">
+                    {t("chatbot.title")}
+                  </p>
+                  <p className="mt-2 text-center text-sm leading-relaxed text-navy/75 whitespace-pre-line">
                     {t("chatbot.welcome")}
                   </p>
-                  <p className="mt-4 text-center text-[0.75rem] leading-snug text-navy/55">
+                  <p className="mt-3 text-center text-[0.75rem] leading-snug text-navy/55">
                     {t("chatbot.contactHint")}
                   </p>
-                  <p className="mt-2 text-center text-[0.7rem] leading-snug text-navy/45">
+                  <p className="mt-1.5 text-center text-[0.7rem] leading-snug text-navy/45">
                     {t("chatbot.contactGate")}
                   </p>
                   <Button
                     type="button"
                     onClick={() => setOnboardingStep("form")}
-                    className="mt-5 h-10 w-full rounded-xl border border-gold bg-gold text-navy hover:bg-gold-soft"
+                    className="mt-5 h-11 w-full rounded-2xl border border-gold bg-gold text-navy shadow-[0_10px_28px_rgba(212,175,55,0.28)] hover:bg-gold-soft"
                   >
                     {t("chatbot.startChatButton")}
                   </Button>
                 </div>
               ) : (
               <div className="flex min-h-0 flex-1 flex-col justify-center px-4 py-5">
+                <div className="mb-3 flex justify-center">
+                  <CaptainAvatar className="size-16 ring-offset-[#f3f6fa]" ring />
+                </div>
                 <p className="text-center text-sm leading-relaxed text-navy/80">
                   {t("chatbot.welcome")}
                 </p>
                 <form
                   onSubmit={(event) => void handleContactSubmit(event)}
-                  className="mt-5 rounded-2xl border border-gold/30 bg-gradient-to-b from-[#fffdf8] to-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
+                  className="mt-4 rounded-2xl border border-gold/25 bg-gradient-to-b from-white to-[#f7fafc] p-3.5 shadow-[0_12px_32px_rgba(15,23,42,0.08)]"
                 >
                   <p className="text-center text-[0.8rem] font-medium text-navy">
                     {t("chatbot.contactTitle")}
@@ -694,34 +789,45 @@ export function ChatbotWidget() {
               )
             ) : (
               <>
+            <div className="relative flex min-h-0 flex-1 flex-col">
             <div
               ref={scrollContainerRef}
               onScroll={handleScroll}
-              className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto px-3 py-3.5 sm:space-y-3.5 sm:px-3.5 sm:py-4"
+              className="min-h-0 flex-1 space-y-3.5 overflow-x-hidden overflow-y-auto px-3 py-4 sm:space-y-4 sm:px-3.5 sm:py-4"
               style={{
                 background:
-                  "linear-gradient(180deg, color-mix(in oklab, var(--sand) 88%, white), color-mix(in oklab, var(--sand) 55%, #eef2f6))",
+                  "radial-gradient(ellipse 120% 60% at 50% -10%, color-mix(in oklab, var(--gold) 10%, transparent), transparent 55%), linear-gradient(180deg, #eef3f8 0%, #f5f7fa 42%, #e8eef5 100%)",
               }}
               aria-live="polite"
               aria-relevant="additions"
             >
               <div
                 className={cn(
-                  "max-w-[min(92%,100%)] min-w-0 break-words rounded-2xl border border-navy/6 bg-white/95 px-3 py-2.5 text-[0.8125rem] leading-relaxed text-navy shadow-[0_8px_24px_rgba(15,23,42,0.06)] [overflow-wrap:anywhere] sm:px-3.5 sm:py-3 sm:text-sm",
-                  isRTL ? "ms-auto me-0 rounded-ee-md" : "me-auto ms-0 rounded-es-md",
+                  "flex max-w-[min(94%,100%)] items-end gap-2",
+                  isRTL ? "ms-auto me-0 flex-row" : "me-auto ms-0 flex-row",
                 )}
               >
-                <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
-                  {visitorName
-                    ? formatPersonalWelcome(t, visitorName, isReturningUser && messages.length === 0)
-                    : t("chatbot.welcome")}
-                </p>
-                <time
-                  className="mt-1.5 block text-[0.62rem] text-navy/40 sm:mt-2 sm:text-[0.65rem]"
-                  dateTime={new Date().toISOString()}
-                >
-                  {formatTime(new Date(), language)}
-                </time>
+                <CaptainAvatar className="mb-5 size-8 ring-1 ring-gold/40 ring-offset-0" ring={false} />
+                <div className="min-w-0">
+                  <div
+                    className={cn(
+                      "min-w-0 break-words rounded-2xl border border-navy/8 bg-white px-3.5 py-2.5 text-[0.8125rem] leading-relaxed text-navy shadow-[0_10px_28px_rgba(15,23,42,0.07)] [overflow-wrap:anywhere] sm:text-sm",
+                      isRTL ? "rounded-es-md" : "rounded-ee-md",
+                    )}
+                  >
+                    <p className="whitespace-pre-line break-words [overflow-wrap:anywhere]">
+                      {visitorName
+                        ? formatPersonalWelcome(t, visitorName, isReturningUser && messages.length === 0)
+                        : t("chatbot.welcome")}
+                    </p>
+                  </div>
+                  <time
+                    className="mt-1.5 block px-1 text-[0.62rem] text-navy/40"
+                    dateTime={new Date().toISOString()}
+                  >
+                    {formatTime(new Date(), language)}
+                  </time>
+                </div>
               </div>
 
               {showQuickReplies ? (
@@ -748,7 +854,7 @@ export function ChatbotWidget() {
                 <div
                   key={message.id}
                   className={cn(
-                    "flex w-full max-w-[min(92%,100%)] min-w-0 flex-col gap-1",
+                    "flex w-full max-w-[min(94%,100%)] min-w-0 flex-col gap-1",
                     message.role === "user"
                       ? isRTL
                         ? "ms-0 me-auto items-start"
@@ -760,23 +866,39 @@ export function ChatbotWidget() {
                 >
                   <div
                     className={cn(
-                      "min-w-0 max-w-full break-words rounded-2xl px-3 py-2.5 text-[0.8125rem] leading-relaxed [overflow-wrap:anywhere] sm:px-3.5 sm:py-3 sm:text-sm",
-                      message.role === "user"
-                        ? "rounded-es-md bg-navy text-navy-foreground shadow-[0_10px_28px_rgba(15,23,42,0.18)]"
-                        : message.error
-                          ? "rounded-ee-md border border-red-200 bg-red-50 text-red-900"
-                          : "rounded-ee-md border border-navy/6 bg-white/95 text-navy shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
-                      message.role === "user" && isRTL && "rounded-es-2xl rounded-ee-md",
-                      message.role === "assistant" && isRTL && "rounded-ee-2xl rounded-es-md",
+                      "flex items-end gap-2",
+                      message.role === "assistant" && (isRTL ? "flex-row" : "flex-row"),
+                      message.role === "user" && "w-full justify-end",
                     )}
                   >
-                    {message.role === "assistant" && !message.error ? (
-                      <AssistantMessageContent content={message.content} />
-                    ) : (
-                      <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.content}</p>
-                    )}
+                    {message.role === "assistant" ? (
+                      <CaptainAvatar className="mb-5 size-7 ring-1 ring-gold/35 ring-offset-0" ring={false} />
+                    ) : null}
+                    <div
+                      className={cn(
+                        "min-w-0 max-w-full break-words rounded-2xl px-3.5 py-2.5 text-[0.8125rem] leading-relaxed [overflow-wrap:anywhere] sm:text-sm",
+                        message.role === "user"
+                          ? "rounded-es-md bg-gradient-to-br from-navy to-[#132a4a] text-navy-foreground shadow-[0_12px_30px_rgba(15,23,42,0.22)]"
+                          : message.error
+                            ? "rounded-ee-md border border-red-200 bg-red-50 text-red-900"
+                            : "rounded-ee-md border border-navy/8 bg-white text-navy shadow-[0_10px_28px_rgba(15,23,42,0.07)]",
+                        message.role === "user" && isRTL && "rounded-es-2xl rounded-ee-md",
+                        message.role === "assistant" && isRTL && "rounded-ee-2xl rounded-es-md",
+                      )}
+                    >
+                      {message.role === "assistant" && !message.error ? (
+                        <AssistantMessageContent content={message.content} />
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.content}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 px-1">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-1",
+                      message.role === "assistant" && (isRTL ? "pe-9" : "ps-9"),
+                    )}
+                  >
                     <time
                       className="text-[0.65rem] text-navy/40"
                       dateTime={message.timestamp.toISOString()}
@@ -796,35 +918,85 @@ export function ChatbotWidget() {
                 </div>
               ))}
 
+              {showFollowUpChips ? (
+                <div
+                  className={cn(
+                    "flex max-w-full flex-wrap gap-1.5 sm:max-w-[95%] sm:gap-2",
+                    isRTL ? "ms-auto me-0 justify-end" : "me-auto ms-0 justify-start",
+                  )}
+                >
+                  {followUpReplies.map((reply) => (
+                    <button
+                      key={reply.label}
+                      type="button"
+                      onClick={() => void submitMessage(reply.message)}
+                      className="rounded-full border border-gold/35 bg-gold/12 px-2.5 py-1.5 text-[0.7rem] font-medium text-navy shadow-sm transition hover:border-gold/60 hover:bg-gold/22 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:px-3 sm:text-xs"
+                    >
+                      {reply.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
               {sending ? (
                 <div
                   className={cn(
-                    "flex max-w-[90%] items-center gap-2.5 rounded-2xl rounded-ee-md border border-navy/6 bg-white/95 px-3.5 py-3 text-sm text-navy/65 shadow-[0_8px_24px_rgba(15,23,42,0.06)]",
+                    "flex max-w-[90%] items-end gap-2",
                     isRTL ? "ms-auto me-0" : "me-auto ms-0",
                   )}
                   role="status"
                   aria-label={t("chatbot.typing")}
                 >
-                  <span className="flex items-center gap-1" aria-hidden>
-                    <span className="size-1.5 animate-bounce rounded-full bg-gold [animation-delay:-0.2s]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-gold [animation-delay:-0.1s]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-gold" />
-                  </span>
-                  <span className="text-xs">{t("chatbot.typing")}…</span>
+                  <CaptainAvatar className="size-7 ring-1 ring-gold/35 ring-offset-0" ring={false} />
+                  <div className="flex items-center gap-2.5 rounded-2xl rounded-ee-md border border-navy/8 bg-white px-3.5 py-3 text-sm text-navy/65 shadow-[0_10px_28px_rgba(15,23,42,0.07)]">
+                    <span className="flex items-center gap-1" aria-hidden>
+                      <span className="size-1.5 animate-bounce rounded-full bg-gold [animation-delay:-0.2s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-gold [animation-delay:-0.1s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-gold" />
+                    </span>
+                    <span className="text-xs">{t("chatbot.typing")}…</span>
+                  </div>
                 </div>
               ) : null}
 
               <div ref={messagesEndRef} />
             </div>
 
+            <AnimatePresence>
+              {showScrollDown ? (
+                <motion.button
+                  key="scroll-latest"
+                  type="button"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => {
+                    stickToBottomRef.current = true;
+                    scrollToBottom();
+                    setShowScrollDown(false);
+                  }}
+                  aria-label={t("chatbot.scrollToLatest")}
+                  className={cn(
+                    "absolute bottom-3 z-10 inline-flex items-center gap-1 rounded-full border border-navy/10 bg-white/95 px-2.5 py-1.5 text-[0.65rem] font-medium text-navy shadow-[0_8px_24px_rgba(15,23,42,0.14)] backdrop-blur-sm transition hover:border-gold/45 hover:text-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold sm:bottom-4 sm:px-3 sm:text-xs",
+                    isRTL ? "left-1/2 -translate-x-1/2" : "left-1/2 -translate-x-1/2",
+                  )}
+                >
+                  <ChevronDown className="size-3.5 shrink-0" aria-hidden />
+                  {t("chatbot.scrollToLatest")}
+                </motion.button>
+              ) : null}
+            </AnimatePresence>
+            </div>
+
             <form
               onSubmit={handleSubmit}
-              className="shrink-0 border-t border-navy/8 bg-white/90 px-2.5 py-2.5 backdrop-blur-md sm:px-3 sm:py-3"
+              className="shrink-0 border-t border-navy/8 bg-white/95 px-2.5 py-2.5 backdrop-blur-md sm:px-3 sm:py-3"
             >
               {contactWarning ? (
                 <p className="mb-2 text-center text-[0.65rem] text-amber-700">{contactWarning}</p>
               ) : null}
-              <div className="flex items-end gap-1.5 rounded-2xl border border-navy/10 bg-[#f7f5f1] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] focus-within:border-gold/45 focus-within:ring-2 focus-within:ring-gold/15 sm:gap-2 sm:p-1.5">
+              <div className="flex items-end gap-1.5 rounded-2xl border border-navy/10 bg-[#eef2f7] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] focus-within:border-gold/50 focus-within:bg-white focus-within:ring-2 focus-within:ring-gold/20 sm:gap-2 sm:p-1.5">
                 <Textarea
                   ref={inputRef}
                   value={input}
@@ -844,7 +1016,7 @@ export function ChatbotWidget() {
                   size="icon"
                   disabled={sending || !input.trim()}
                   aria-label={t("chatbot.send")}
-                  className="size-9 shrink-0 rounded-xl border border-navy/80 bg-navy text-navy-foreground transition hover:border-gold hover:bg-gold hover:text-navy disabled:opacity-40 sm:size-10"
+                  className="size-9 shrink-0 rounded-xl border border-gold/70 bg-gold text-navy transition hover:bg-gold-soft disabled:border-navy/15 disabled:bg-navy/25 disabled:text-white/70 sm:size-10"
                 >
                   {sending ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -882,7 +1054,22 @@ export function ChatbotWidget() {
           ) : null}
 
           <AnimatePresence>
-            {showAttentionBadge ? (
+            {unreadCount > 0 && !open ? (
+              <motion.span
+                key="unread-badge"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.6, opacity: 0 }}
+                className={cn(
+                  "pointer-events-none absolute z-10 grid min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[0.65rem] font-semibold text-white shadow-sm ring-2 ring-white/90",
+                  unreadCount > 9 ? "size-6" : "size-5",
+                  isRTL ? "-top-0.5 -left-0.5" : "-top-0.5 -right-0.5",
+                )}
+                aria-label={t("chatbot.unreadBadge")}
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </motion.span>
+            ) : showAttentionBadge ? (
               <motion.span
                 key="teaser-badge"
                 initial={{ scale: 0.6, opacity: 0 }}
@@ -928,16 +1115,24 @@ export function ChatbotWidget() {
             aria-label={t("chatbot.fabLabel")}
             aria-expanded={open}
             aria-controls={open ? panelId : undefined}
-            whileHover={{ y: -2, scale: 1.03 }}
+            whileHover={{ y: -2, scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
             className={cn(
-              "relative inline-flex size-12 items-center justify-center rounded-full sm:size-14",
-              "border border-gold-soft bg-gold text-navy shadow-[0_12px_32px_rgba(15,23,42,0.28),0_0_0_4px_rgba(212,175,55,0.22)]",
-              "transition-colors hover:bg-gold-soft hover:shadow-[0_14px_36px_rgba(15,23,42,0.32),0_0_0_5px_rgba(212,175,55,0.28)]",
-              "focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-navy",
+              "relative inline-flex size-14 items-center justify-center overflow-hidden rounded-full sm:size-[3.75rem]",
+              "border-2 border-gold bg-navy text-navy shadow-[0_14px_36px_rgba(15,23,42,0.34),0_0_0_4px_rgba(212,175,55,0.22)]",
+              "transition-shadow hover:shadow-[0_16px_40px_rgba(15,23,42,0.38),0_0_0_5px_rgba(212,175,55,0.3)]",
+              "focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-gold",
             )}
           >
-            <Bot className="size-6" strokeWidth={1.75} aria-hidden />
+            <img
+              src={CAPTAIN_AVATAR_SRC}
+              alt=""
+              width={60}
+              height={60}
+              className="size-full object-cover object-[center_18%]"
+              draggable={false}
+              decoding="async"
+            />
           </motion.button>
         </div>
 

@@ -2,7 +2,6 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { PageHeader } from "@/components/site/PageHeader";
 import { WhyChooseUs } from "@/components/site/WhyChooseUs";
-import { TeamSection } from "@/components/site/TeamSection";
 import { FleetSection } from "@/components/site/FleetSection";
 import { Reveal } from "@/components/shared/Reveal";
 import { Counter } from "@/components/shared/Counter";
@@ -175,7 +174,6 @@ function AboutPage() {
         </div>
       </section>
 
-      <TeamSection />
       <FleetSection />
       <WhyChooseUs />
 

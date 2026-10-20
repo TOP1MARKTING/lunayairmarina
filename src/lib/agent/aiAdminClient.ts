@@ -100,6 +100,28 @@ function buildKnowledgeDocId(type: string, slug: string, language: string): stri
   return `${type}-${slug}-${language}`.replace(/[^a-zA-Z0-9_-]+/g, "-").toLowerCase();
 }
 
+export async function listKnowledgeCandidatesClient(
+  db: Firestore,
+  max = 80,
+): Promise<KnowledgeCandidateRecord[]> {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, KNOWLEDGE_CANDIDATES_COLLECTION),
+        orderBy("createdAt", "desc"),
+        limit(max),
+      ),
+    );
+    return snap.docs.map((item) => item.data() as KnowledgeCandidateRecord);
+  } catch {
+    const snap = await getDocs(collection(db, KNOWLEDGE_CANDIDATES_COLLECTION));
+    return snap.docs
+      .map((item) => item.data() as KnowledgeCandidateRecord)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, max);
+  }
+}
+
 export async function approveKnowledgeCandidateClient(
   db: Firestore,
   candidate: KnowledgeCandidateRecord,
@@ -134,4 +156,19 @@ export async function approveKnowledgeCandidateClient(
     { merge: true },
   );
   return document;
+}
+
+export async function rejectKnowledgeCandidateClient(
+  db: Firestore,
+  candidate: KnowledgeCandidateRecord,
+): Promise<void> {
+  await setDoc(
+    doc(db, KNOWLEDGE_CANDIDATES_COLLECTION, candidate.id),
+    {
+      ...candidate,
+      status: "rejected",
+      reviewedAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
 }

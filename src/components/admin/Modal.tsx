@@ -67,7 +67,7 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label={t("admin.actions.cancel")}
-                className="grid size-11 shrink-0 place-items-center rounded-lg text-navy/40 transition-colors hover:bg-[#faf8f4] hover:text-navy"
+                className="grid size-11 shrink-0 place-items-center rounded-lg text-navy/40 transition-colors hover:bg-sand hover:text-navy"
               >
                 <X className="size-5" strokeWidth={1.5} />
               </button>
@@ -127,7 +127,7 @@ export function ModalField({
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          className="resize-none rounded-xl border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
+          className="resize-none rounded-xl border border-navy/10 bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
         />
       ) : (
         <input
@@ -135,7 +135,7 @@ export function ModalField({
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          className="rounded-xl border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
+          className="rounded-xl border border-navy/10 bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
         />
       )}
     </label>

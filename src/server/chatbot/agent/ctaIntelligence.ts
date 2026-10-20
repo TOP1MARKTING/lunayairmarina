@@ -24,7 +24,21 @@ export function shouldAttachWhatsApp(cta: CtaType, analysis: AgentAnalysis, cont
   if (blocksWhatsAppCta(analysis.objections, context)) return false;
   if (analysis.questionFocus === "contact_phone") return false;
   if (analysis.intent === "CONTACT" && context.requestedContactMethod === "phone") return false;
-  return cta === "WHATSAPP" || cta === "HANDOFF";
+  if (cta === "WHATSAPP" || cta === "HANDOFF") return true;
+  const contactReady = Boolean(context.name && context.phone);
+  if (
+    contactReady &&
+    context.lastServiceMentioned &&
+    (cta === "CONSULTATION" ||
+      analysis.nextBestAction === "CTA_CONSULTATION" ||
+      analysis.nextBestAction === "CTA_WHATSAPP" ||
+      analysis.nextBestAction === "HANDOFF") &&
+    analysis.commercialScore >= 45 &&
+    !analysis.objections.includes("thinking")
+  ) {
+    return true;
+  }
+  return false;
 }
 
 export function nbaFromCta(cta: CtaType): NextBestAction {

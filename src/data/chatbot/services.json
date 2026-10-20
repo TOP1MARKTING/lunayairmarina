@@ -5,128 +5,356 @@
       "slug": "yacht-management-360",
       "title": {
         "en": "Complete Yacht & Boat Management (360°)",
-        "ar": "إدارة يخوت ٣٦٠ درجة"
+        "ar": "إدارة اليخوت والقوارب إدارة شاملة (360 درجة)"
       },
       "summary": {
-        "en": "Integrated operational, technical and financial management for yachts and boats, including crew supervision, planned maintenance, budgeting and maritime compliance.",
-        "ar": "إدارة تشغيلية وفنية ومالية متكاملة لليخوت، تشمل إشراف الطاقم والصيانة المخططة والميزانية والامتثال البحري."
+        "en": "From administration and finance to maintenance and operations, we ensure peace of mind with the highest levels of comfort and safety.",
+        "ar": "من الشؤون الإدارية والمالية إلى الصيانة والتشغيل، نضمن لكم راحة البال وأعلى مستويات الرفاهية والأمان."
+      },
+      "intro": {
+        "en": "We deliver an integrated solution for managing your yacht or boat across operational, technical and financial dimensions. From crew supervision and planned maintenance to budgeting and maritime compliance, we take care of everything. You can also choose a modular approach that lets you select only the services you need.",
+        "ar": "نحن نقدم حلاً متكاملاً لإدارة يختك أو قاربك، يغطي جميع الجوانب التشغيلية والفنية والمالية. من الإشراف على الطاقم والصيانة الدورية إلى إدارة الميزانية والامتثال للقوانين البحرية، نحن نتولى كل شيء. يمكنك أيضاً اختيار نهج وحدوي يسمى المنهجية المعيارية (Modular approach) يتيح لك اختيار الخدمات التي تحتاجها فقط."
+      },
+      "detailBody": {
+        "en": "From administration and finance to maintenance and operations, we ensure peace of mind with the highest levels of comfort and safety.",
+        "ar": "من الشؤون الإدارية والمالية إلى الصيانة والتشغيل، نضمن لكم راحة البال وأعلى مستويات الرفاهية والأمان."
       },
       "includes": {
         "en": [
-          "Technical supervision and planned maintenance",
-          "Refit management",
-          "Crew recruitment and payroll",
-          "Insurance and class & flag compliance",
-          "Operational planning and OPEX reporting",
-          "Dedicated yacht manager"
+          "Planned maintenance systems",
+          "Class & flag compliance",
+          "Budgeting and reporting",
+          "24/7 command centre with full voyage logging",
+          "Integrated maintenance planning and class requirements",
+          "Transparent financial oversight with detailed monthly dashboards"
         ],
         "ar": [
-          "الإشراف الفني والصيانة المخططة",
-          "إدارة التجديد",
-          "توظيف الطاقم والرواتب",
-          "التأمين والامتثال للتصنيف والعلم",
-          "التخطيط التشغيلي وتقارير التكاليف",
-          "مدير يخت مخصص"
+          "أنظمة صيانة مخططة",
+          "الامتثال للتصنيف والعَلَم",
+          "إعداد الميزانيات والتقارير",
+          "مركز قيادة يعمل على مدار الساعة وتسجيل كامل للرحلات",
+          "تخطيط متكامل للصيانة ومتطلبات التصنيف البحري",
+          "مراقبة مالية شفافة مع لوحات شهرية مفصلة"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "24/7 command centre with full voyage logging",
+          "Integrated maintenance planning and class requirements",
+          "Transparent financial oversight with detailed monthly dashboards"
+        ],
+        "ar": [
+          "مركز قيادة يعمل على مدار الساعة وتسجيل كامل للرحلات",
+          "تخطيط متكامل للصيانة ومتطلبات التصنيف البحري",
+          "مراقبة مالية شفافة مع لوحات شهرية مفصلة"
+        ]
+      },
+      "values": {
+        "en": [
+          {
+            "title": "Dedicated yacht manager",
+            "description": "One point of contact managing crew and suppliers with accurate owner updates."
+          },
+          {
+            "title": "Predictive maintenance",
+            "description": "A digital maintenance matrix aligning class surveys, guest bookings and haul-outs."
+          },
+          {
+            "title": "Governance & compliance",
+            "description": "Periodic reviews of ISM and ISPS documents and insurance renewals before deadlines."
+          }
+        ],
+        "ar": [
+          {
+            "title": "مدير يخت مخصص",
+            "description": "نقطة اتصال واحدة تدير الطاقم والموردين وتقدم تحديثات دقيقة للمالك."
+          },
+          {
+            "title": "صيانة تنبؤية",
+            "description": "مصفوفة صيانة رقمية توائم بين فحوصات التصنيف وحجوزات الضيوف والجفاف."
+          },
+          {
+            "title": "حوكمة وامتثال",
+            "description": "مراجعات دورية لوثائق ISM وISPS وتجديدات التأمين قبل المواعيد النهائية."
+          }
         ]
       },
       "pricingLabel": {
         "en": "Custom package",
         "ar": "باقة مخصصة"
       },
-      "intentIds": ["YACHT_MANAGEMENT", "YACHT_MANAGEMENT_360"]
+      "intentIds": [
+        "YACHT_MANAGEMENT",
+        "YACHT_MANAGEMENT_360"
+      ]
     },
     {
       "id": "visiting-yacht-agency",
       "slug": "visiting-yacht-agency",
       "title": {
         "en": "Agency Services for Visiting Yachts",
-        "ar": "وكالة اليخوت الزائرة"
+        "ar": "خدمات الوكالة لليخوت الزائرة"
       },
       "summary": {
-        "en": "Support for international yachts arriving in Saudi waters, including clearance, permits, berthing, provisioning, logistics and concierge.",
-        "ar": "دعم اليخوت الدولية القادمة إلى المياه السعودية بالتخليص والتصاريح والرسو والتموين والخدمات اللوجستية والكونسيرج."
+        "en": "We welcome visiting yachts to Saudi shores and simplify every arrival and departure procedure with confidence.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة ونسهّل كل إجراءات الوصول والمغادرة بثقة وسلاسة."
+      },
+      "intro": {
+        "en": "We welcome visiting yachts to the shores of the Kingdom of Saudi Arabia and handle every procedure required for a smooth arrival and comfortable departure. We take care of entry permits, customs clearance and all required documentation, so you can focus on enjoying the beauty of the Red Sea.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة العربية السعودية، ونتولى تسهيل جميع الإجراءات اللازمة لضمان وصول سلس ومغادرة مريحة. نحن نعتني بإنهاء أذونات الدخول، والتخليص الجمركي، وتوفير كافة الأوراق المطلوبة، مما يتيح لك التركيز على الاستمتاع بجمال البحر الأحمر."
+      },
+      "detailBody": {
+        "en": "We welcome visiting yachts to the shores of the Kingdom of Saudi Arabia and handle every procedure required for a smooth arrival and comfortable departure. We take care of entry permits, customs clearance and all required documentation, so you can focus on enjoying the beauty of the Red Sea.",
+        "ar": "نرحب باليخوت الزائرة إلى سواحل المملكة العربية السعودية، ونتولى تسهيل جميع الإجراءات اللازمة لضمان وصول سلس ومغادرة مريحة. نحن نعتني بإنهاء أذونات الدخول، والتخليص الجمركي، وتوفير كافة الأوراق المطلوبة، مما يتيح لك التركيز على الاستمتاع بجمال البحر الأحمر."
       },
       "includes": {
         "en": [
-          "Entry permits and customs clearance",
-          "Berth reservation and pilotage",
-          "Provisioning and logistics",
-          "VIP transfers and concierge"
+          "Clearance & permits",
+          "Berth reservation",
+          "Provisioning and concierge",
+          "Fast entry permits and coordination with port authorities",
+          "Full hospitality and provisioning for guests and crew",
+          "Real-time follow-up on customs and clearance procedures"
         ],
         "ar": [
-          "تصاريح الدخول والتخليص الجمركي",
-          "حجز الرصيف والإرشاد",
-          "التموين واللوجستيات",
-          "نقل VIP والكونسيرج"
+          "التخليص والتصاريح",
+          "حجز المراسي",
+          "التموين وخدمات الكونسيرج",
+          "تصاريح دخول سريعة والتنسيق مع سلطات الموانئ",
+          "خدمات ضيافة وتموين شاملة للضيوف والطاقم",
+          "متابعة فورية لإجراءات الجمارك والتخليص"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Fast entry permits and coordination with port authorities",
+          "Full hospitality and provisioning for guests and crew",
+          "Real-time follow-up on customs and clearance procedures"
+        ],
+        "ar": [
+          "تصاريح دخول سريعة والتنسيق مع سلطات الموانئ",
+          "خدمات ضيافة وتموين شاملة للضيوف والطاقم",
+          "متابعة فورية لإجراءات الجمارك والتخليص"
+        ]
+      },
+      "values": {
+        "en": [
+          {
+            "title": "Simplified arrival procedures",
+            "description": "We coordinate pilotage, bunkering and berthing so the captain stays focused on navigation."
+          },
+          {
+            "title": "Integrated hospitality",
+            "description": "VIP transfers, provisioning and villa bookings through one connected channel."
+          },
+          {
+            "title": "Regulatory reliability",
+            "description": "Our accredited agents remain present until all official departure procedures are complete."
+          }
+        ],
+        "ar": [
+          {
+            "title": "إجراءات وصول مبسطة",
+            "description": "ننسق الإرشاد والتزود بالوقود والرسو ليبقى القبطان مركزاً على الملاحة فقط."
+          },
+          {
+            "title": "ضيافة متكاملة",
+            "description": "نقل كبار الشخصيات والتموين وحجوزات الفلل عبر قناة واحدة متصلة."
+          },
+          {
+            "title": "موثوقية تنظيمية",
+            "description": "مندوبونا المعتمدون متواجدون حتى انتهاء جميع الإجراءات الرسمية للمغادرة."
+          }
         ]
       },
       "pricingLabel": {
         "en": "Annual subscription",
         "ar": "اشتراك سنوي"
       },
-      "intentIds": ["VISITING_YACHT_AGENCY", "VISITING_YACHT_CLEARANCE", "VISITING_YACHT_PERMITS"]
+      "intentIds": [
+        "VISITING_YACHT_AGENCY",
+        "VISITING_YACHT_CLEARANCE",
+        "VISITING_YACHT_PERMITS"
+      ]
     },
     {
       "id": "marina-management",
       "slug": "marina-management",
       "title": {
         "en": "Marina & Yacht Club Operations",
-        "ar": "إدارة المارينا"
+        "ar": "إدارة وتشغيل المراسي والنوادي البحرية"
       },
       "summary": {
-        "en": "Professional marina and yacht-club operations for safe, luxury berthing, facility operations, and safety.",
-        "ar": "تشغيل احترافي للمارينا ونوادي اليخوت مع حلول رسو آمنة وتشغيل المرافق والسلامة."
+        "en": "World-class marina and yacht-club operations for safe berthing and a refined member experience.",
+        "ar": "إدارة مراسي ونوادٍ بحرية بمعايير عالمية، لبيئة رسو آمنة وفاخرة وتجربة أعضاء راقية."
+      },
+      "intro": {
+        "en": "We operate marinas to the highest international standards, creating a safe and luxurious berthing environment for yachts and boats. We also manage yacht clubs that offer exclusive leisure and amenities for owners, powered by modern technology that makes them ideal destinations for relaxation and connection.",
+        "ar": "نعمل على إدارة المراسي البحرية بأعلى المعايير العالمية، مما يوفر بيئة آمنة وفاخرة لرسو اليخوت والقوارب. كما ندير النوادي البحرية التي تقدم خدمات ترفيهية ووسائل راحة حصرية لأصحاب اليخوت والقوارب، وباستخدام التكنولوجيا الحديثة مما يجعلها وجهة مثالية للاسترخاء والتواصل."
+      },
+      "detailBody": {
+        "en": "We operate marinas to the highest international standards, creating a safe and luxurious berthing environment for yachts and boats. We also manage yacht clubs that offer exclusive leisure and amenities for owners, powered by modern technology that makes them ideal destinations for relaxation and connection.",
+        "ar": "نعمل على إدارة المراسي البحرية بأعلى المعايير العالمية، مما يوفر بيئة آمنة وفاخرة لرسو اليخوت والقوارب. كما ندير النوادي البحرية التي تقدم خدمات ترفيهية ووسائل راحة حصرية لأصحاب اليخوت والقوارب، وباستخدام التكنولوجيا الحديثة مما يجعلها وجهة مثالية للاسترخاء والتواصل."
       },
       "includes": {
         "en": [
-          "Digital berth bookings",
-          "Facility and club operations",
-          "Safety and security routines",
-          "Member events and hospitality"
+          "Berth allocation",
+          "Facility operations",
+          "Safety and security",
+          "Digital berth bookings with real-time utility monitoring",
+          "Dock and guest-service teams trained in luxury hospitality",
+          "Club programmes and events that lift operational yield"
         ],
         "ar": [
-          "حجز أرصفة رقمي",
-          "تشغيل المرافق والنادي",
-          "إجراءات السلامة والأمن",
-          "فعاليات الضيافة للأعضاء"
+          "توزيع المراسي",
+          "تشغيل المرافق",
+          "السلامة والأمن",
+          "حجوزات أرصفة رقمية مع مراقبة فورية للاستهلاك",
+          "فرق أرصفة وخدمة عملاء مدربة على الضيافة الراقية",
+          "برامج نادي وفعاليات تزيد من العائد التشغيلي"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Digital berth bookings with real-time utility monitoring",
+          "Dock and guest-service teams trained in luxury hospitality",
+          "Club programmes and events that lift operational yield"
+        ],
+        "ar": [
+          "حجوزات أرصفة رقمية مع مراقبة فورية للاستهلاك",
+          "فرق أرصفة وخدمة عملاء مدربة على الضيافة الراقية",
+          "برامج نادي وفعاليات تزيد من العائد التشغيلي"
+        ]
+      },
+      "values": {
+        "en": [
+          {
+            "title": "Seamless operations",
+            "description": "We apply SOPs, training and safety routines every week."
+          },
+          {
+            "title": "Member loyalty",
+            "description": "Curated events and guest-experience analytics keep members engaged."
+          },
+          {
+            "title": "Revenue clarity",
+            "description": "Dynamic pricing models and clear reporting for partners and owners."
+          }
+        ],
+        "ar": [
+          {
+            "title": "تشغيل سلس",
+            "description": "نطبق إجراءات التشغيل القياسية والتدريبات والسلامة أسبوعياً."
+          },
+          {
+            "title": "ولاء الأعضاء",
+            "description": "فعاليات مختارة وتحليلات تجربة عميل تضمن تفاعل الأعضاء باستمرار."
+          },
+          {
+            "title": "وضوح الإيرادات",
+            "description": "نماذج تسعير ديناميكية وتقارير واضحة للشركاء والمالكين."
+          }
         ]
       },
       "pricingLabel": {
         "en": "Managed programme",
-        "ar": "برنامج إدارة"
+        "ar": "برنامج مُدار"
       },
-      "intentIds": ["MARINA_MANAGEMENT", "MARINA_OPERATIONS", "BERTHING"]
+      "intentIds": [
+        "MARINA_MANAGEMENT",
+        "MARINA_OPERATIONS",
+        "BERTHING"
+      ]
     },
     {
       "id": "crew-management",
       "slug": "crew-management",
       "title": {
         "en": "Crew Recruitment Services",
-        "ar": "إدارة الطواقم"
+        "ar": "خدمات توظيف الطاقم"
       },
       "summary": {
-        "en": "Recruitment, vetting and management of certified marine professionals including captains, engineers and hospitality crew, with contracts, payroll and training.",
-        "ar": "توظيف وتدقيق وإدارة كوادر بحرية معتمدة من قباطنة ومهندسين وطاقم ضيافة، مع العقود والرواتب والتدريب."
+        "en": "Carefully selected, qualified crew matched to your needs and ready to deliver outstanding service.",
+        "ar": "توظيف طاقم مؤهل بعناية فائقة ليتوافق مع مهاراتك وتفضيلاتك ويقدّم أعلى مستويات الخدمة."
+      },
+      "intro": {
+        "en": "We know the right crew is the foundation of an exceptional experience. Our recruitment team carefully selects candidates to match your unique requirements in skill and character. You can trust that every crew member is qualified, experienced and ready to deliver the highest standard of service.",
+        "ar": "ندرك أن الطاقم المناسب هو أساس التجربة الاستثنائية. يختار فريق التوظيف لدينا المرشحين بعناية فائقة، لضمان توافقهم مع متطلباتك الفريدة، من حيث المهارة والشخصية. يمكنك أن تثق بأن كل فرد في الطاقم لدينا مؤهل، وذو خبرة، ومستعد لتقديم أرقى مستويات الخدمة."
+      },
+      "detailBody": {
+        "en": "We know the right crew is the foundation of an exceptional experience. Our recruitment team carefully selects candidates to match your unique requirements in skill and character. You can trust that every crew member is qualified, experienced and ready to deliver the highest standard of service.",
+        "ar": "ندرك أن الطاقم المناسب هو أساس التجربة الاستثنائية. يختار فريق التوظيف لدينا المرشحين بعناية فائقة، لضمان توافقهم مع متطلباتك الفريدة، من حيث المهارة والشخصية. يمكنك أن تثق بأن كل فرد في الطاقم لدينا مؤهل، وذو خبرة، ومستعد لتقديم أرقى مستويات الخدمة."
       },
       "includes": {
         "en": [
           "Vetted crew placement",
-          "Contracts and payroll",
+          "Payroll & contracts",
           "Training and certification",
-          "90-day performance follow-up"
+          "Global talent network with comprehensive background checks",
+          "Behavioural assessments focused on hospitality skills",
+          "Crew rotation plans and continuous training credentials"
         ],
         "ar": [
-          "توظيف طاقم مدقق",
+          "طواقم مدققة",
           "العقود والرواتب",
           "التدريب والشهادات",
-          "متابعة الأداء لـ 90 يوم"
+          "شبكة مواهب عالمية مع تحقق شامل من الخلفيات",
+          "اختبارات سلوكية وتركيز على مهارات الضيافة",
+          "خطط تدوير للطاقم واعتمادات تدريب مستمر"
+        ]
+      },
+      "benefits": {
+        "en": [
+          "Global talent network with comprehensive background checks",
+          "Behavioural assessments focused on hospitality skills",
+          "Crew rotation plans and continuous training credentials"
+        ],
+        "ar": [
+          "شبكة مواهب عالمية مع تحقق شامل من الخلفيات",
+          "اختبارات سلوكية وتركيز على مهارات الضيافة",
+          "خطط تدوير للطاقم واعتمادات تدريب مستمر"
+        ]
+      },
+      "values": {
+        "en": [
+          {
+            "title": "Precise shortlists",
+            "description": "Three matched profiles per role with personality insights."
+          },
+          {
+            "title": "Faster onboarding",
+            "description": "Visa, screening and registration run in parallel to reduce time."
+          },
+          {
+            "title": "Performance follow-up",
+            "description": "90-day monitoring with guest-satisfaction metrics to keep standards steady."
+          }
+        ],
+        "ar": [
+          {
+            "title": "قوائم مختصرة دقيقة",
+            "description": "نوفر ثلاثة ملفات متطابقة لكل وظيفة مع تحليلات للشخصية."
+          },
+          {
+            "title": "انضمام أسرع",
+            "description": "إجراءات التأشيرات والفحوصات والتسجيل تتم بالتوازي لتقليل الوقت."
+          },
+          {
+            "title": "متابعة الأداء",
+            "description": "متابعة خلال ٩٠ يوماً مع قياس رضا الضيوف لضمان ثبات المستوى."
+          }
         ]
       },
       "pricingLabel": {
         "en": "Placement fee",
-        "ar": "رسوم التوظيف"
+        "ar": "رسوم توظيف"
       },
-      "intentIds": ["CREW_MANAGEMENT", "CREW_RECRUITMENT", "CREW_SALARIES", "CREW_TRAINING"]
+      "intentIds": [
+        "CREW_MANAGEMENT",
+        "CREW_RECRUITMENT",
+        "CREW_SALARIES",
+        "CREW_TRAINING"
+      ]
     }
   ]
 }

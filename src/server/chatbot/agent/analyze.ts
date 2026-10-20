@@ -124,6 +124,12 @@ export function detectBuyingSignals(message: string): string[] {
   if (/أبي عرض|ابي عرض|أرسلوا لي عرض|send me an offer|send me details|proposal|quote|عرض سعر|book consultation/.test(text)) {
     signals.push("offer");
   }
+  if (/حجز|احجز|أحجز|book(?:ing)?|reserve|reservation|موعد|appointment/i.test(text)) {
+    signals.push("booking");
+  }
+  if (/كمل|أكمل|complete|next step|الخطوة|proceed|follow up|متابعة|أكمل الطلب|complete (?:the )?booking/i.test(text)) {
+    signals.push("proceed");
+  }
   if (/أتعاقد|كيف أتعاقد|how can i sign|contract|عقد/.test(text)) signals.push("contract");
   if (/متى تقدرون تبدأون|when can you start|متى تبدأون/.test(text)) signals.push("start_timing");
   if (/أحتاج إدارة الآن|ابي إدارة الآن|need management now/.test(text)) signals.push("need_now");
@@ -335,6 +341,7 @@ export function computeCommercialScore(
   if (detectPricingInterest(message)) score += 14;
   if (signals.includes("start") || signals.includes("need_now")) score += 22;
   if (signals.includes("offer") || signals.includes("contract")) score += 20;
+  if (signals.includes("booking") || signals.includes("proceed")) score += 18;
   if (signals.includes("talk_to_human")) score += 12;
   if (signals.includes("start_timing")) score += 10;
   if (context.yachtLength && context.location) score += 10;
@@ -352,7 +359,9 @@ export function resolveConversationStage(
 ): ConversationStage {
   if (signals.includes("talk_to_human") && (context.name || context.phone)) return "HANDOFF";
   if (objections.length) return "OBJECTION";
-  if (score >= 70 || signals.includes("start") || signals.includes("offer")) return "HIGH_INTENT";
+  if (score >= 70 || signals.includes("start") || signals.includes("offer") || signals.includes("booking")) {
+    return "HIGH_INTENT";
+  }
   if (detectPricingInterest(message) || score >= 45) return "CONSIDERATION";
   if (context.yachtLength && context.location && context.lastServiceMentioned) return "QUALIFICATION";
   if (context.lastServiceMentioned) return "SERVICE_IDENTIFICATION";
@@ -395,14 +404,32 @@ export function resolveNextBestAction(input: {
     return adjustNbaForObjections("ANSWER", input.objections, input.context);
   }
   if (input.urgency === "HIGH" && input.score >= 55 && !refusedWhatsapp) return "HANDOFF";
+  const contactReady = Boolean(input.context.name && input.context.phone);
+  if (
+    !refusedWhatsapp &&
+    contactReady &&
+    input.context.lastServiceMentioned &&
+    (input.signals.includes("booking") ||
+      input.signals.includes("proceed") ||
+      input.signals.includes("pricing_interest")) &&
+    input.score >= 45
+  ) {
+    return "CTA_WHATSAPP";
+  }
   if (
     (input.signals.includes("start") ||
       input.signals.includes("offer") ||
       input.signals.includes("contract") ||
+      input.signals.includes("booking") ||
+      input.signals.includes("proceed") ||
+      (contactReady && input.score >= 58) ||
       input.score >= 70) &&
     !refusedWhatsapp
   ) {
-    return input.signals.includes("offer") ? "CTA_CONSULTATION" : "CTA_WHATSAPP";
+    if (input.signals.includes("offer") && !input.signals.includes("booking")) {
+      return contactReady ? "CTA_WHATSAPP" : "CTA_CONSULTATION";
+    }
+    return "CTA_WHATSAPP";
   }
   const askingDetails = detectPricingInterest(input.message) || detectProgressive(input.message);
   if (
@@ -679,6 +706,7 @@ export function buildAgentStateBlock(
   const antiRepBlock = context
     ? buildAntiRepetitionBlock(context, topicKey, analysis.disclosureLevel, language)
     : "";
+  const contactReady = Boolean(context?.name && context?.phone);
   const shared = `AGENT STATE (internal, do not mention to the user):
 intent=${analysis.intent}
 stage=${analysis.conversationStage}
@@ -687,6 +715,7 @@ nba=${analysis.nextBestAction}
 ctaType=${ctaType}
 urgency=${analysis.urgency}
 ctaWarmth=${ctaWarmth}
+contactSaved=${contactReady ? "yes" : "no"}
 replyLanguage=${language}
 missing=${analysis.missingInformation.join(",") || "none"}
 askOnly=${missingHint}
@@ -697,7 +726,8 @@ objections=${analysis.objections.join(",") || "none"}
 Role: sales + support + qualification agent (not FAQ bot, not human).
 Answer first when facts exist. One missing-info question max. Never re-ask known facts.
 Use ONLY ALLOWED FACTS from PROGRESSIVE DISCLOSURE and VERIFIED KNOWLEDGE — paraphrase naturally; no invented details. Do not repeat previously disclosed fact IDs.
-Cold= value first; hot/urgent= direct WhatsApp only if visitor did not refuse and ctaType allows.`;
+WhatsApp routing: read the full conversation — when the visitor wants to proceed, book, get a quote, complete a request, or speak with the team, end with a natural WhatsApp handoff (published link) if ctaType allows and they did not refuse WhatsApp. Do not push WhatsApp on pure info questions or while they are still exploring.
+Cold= value first; warm+contactSaved= after a helpful answer, a soft WhatsApp invite is OK for quotes/booking; hot/urgent= direct WhatsApp if visitor did not refuse and ctaType allows.`;
   return [shared, disclosureBlock, objectionBlock, antiRepBlock].filter(Boolean).join("\n\n");
 }
 

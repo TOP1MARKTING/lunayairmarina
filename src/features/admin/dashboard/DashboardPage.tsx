@@ -5,19 +5,21 @@ import {
   Anchor,
   ArrowRight,
   ArrowUpRight,
-  FileText,
+  Bot,
+  ClipboardList,
   HelpCircle,
-  Image as ImageIcon,
-  MessageSquare,
+  Images,
+  Inbox,
   Newspaper,
   Quote,
-  Settings,
+  Settings2,
   Ship,
   Sparkles,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardCard } from "@/components/admin/DashboardCard";
 import { StatusBadge } from "@/components/admin/DataTable";
+import { AdminSectionTitle } from "@/components/admin/AdminUi";
 import { useLanguage } from "@/lib/i18n";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useOptionalSiteContent } from "@/providers/SiteContentProvider";
@@ -126,7 +128,6 @@ export function DashboardPage() {
   const testimonialsCount = site?.bundle?.testimonials?.length || testimonialRecords.length;
   const faqCount = site?.bundle?.faq?.length || faqRecords.length;
   const newMessages = { length: newMessageCount };
-  const firebaseReady = syncStatus === "synced";
   const syncLabel =
     syncStatus === "synced"
       ? t("admin.cms.syncSynced")
@@ -150,25 +151,25 @@ export function DashboardPage() {
   const quickActions = [
     {
       to: "/admin/content",
-      icon: FileText,
+      icon: ClipboardList,
       title: t("admin.dashboard.actions.content"),
       body: t("admin.dashboard.actions.contentHint"),
     },
     {
-      to: "/admin/blog",
-      icon: Newspaper,
-      title: t("admin.dashboard.actions.blog"),
-      body: t("admin.dashboard.actions.blogHint"),
+      to: "/admin/ai",
+      icon: Bot,
+      title: t("admin.nav.ai"),
+      body: t("admin.dashboard.actions.aiHint"),
     },
     {
       to: "/admin/messages",
-      icon: MessageSquare,
+      icon: Inbox,
       title: t("admin.dashboard.actions.messages"),
       body: t("admin.dashboard.actions.messagesHint"),
     },
     {
       to: "/admin/settings",
-      icon: Settings,
+      icon: Settings2,
       title: t("admin.dashboard.actions.settings"),
       body: t("admin.dashboard.actions.settingsHint"),
     },
@@ -177,7 +178,7 @@ export function DashboardPage() {
   const contentHealth = [
     { label: t("admin.nav.services"), value: servicesCount, to: "/admin/services", icon: Anchor },
     { label: t("admin.nav.blog"), value: postsCount, to: "/admin/blog", icon: Newspaper },
-    { label: t("admin.nav.gallery"), value: galleryCount, to: "/admin/gallery", icon: ImageIcon },
+    { label: t("admin.nav.gallery"), value: galleryCount, to: "/admin/gallery", icon: Images },
     {
       label: t("admin.nav.testimonials"),
       value: testimonialsCount,
@@ -189,62 +190,41 @@ export function DashboardPage() {
       label: t("admin.dashboard.stats.messages"),
       value: inboxCount,
       to: "/admin/messages",
-      icon: MessageSquare,
-    },
-  ];
-
-  const activity = [
-    {
-      title: t("admin.dashboard.activityItems.content"),
-      meta: t("admin.dashboard.activityItems.contentMeta"),
-    },
-    {
-      title: t("admin.dashboard.activityItems.messages"),
-      meta: t("admin.dashboard.activityItems.messagesMeta").replace(
-        "{count}",
-        String(newMessages.length),
-      ),
-    },
-    {
-      title: t("admin.dashboard.activityItems.firebase"),
-      meta: firebaseReady
-        ? t("admin.dashboard.activityItems.firebaseReady")
-        : t("admin.dashboard.activityItems.firebasePending"),
+      icon: Inbox,
     },
   ];
 
   return (
     <AdminLayout title={t("admin.dashboard.title")}>
-      {/* Welcome band — light admin palette */}
-      <section className="relative overflow-hidden rounded-2xl border border-navy/8 bg-white px-4 py-5 sm:px-8 sm:py-8">
+      <section className="admin-panel-dark relative overflow-hidden px-4 py-6 sm:px-8 sm:py-9">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(201,169,110,0.14),transparent_42%)]"
+          className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-gold/70 to-transparent"
         />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between lg:gap-6">
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl min-w-0">
-            <p className="inline-flex items-center gap-2 text-[0.65rem] tracking-[0.22em] text-navy/45 uppercase">
-              <Sparkles className="size-3.5 shrink-0 text-gold" strokeWidth={1.6} />
+            <p className="inline-flex items-center gap-2 rounded-full border border-gold/35 bg-gold/15 px-3 py-1 text-[0.65rem] tracking-[0.18em] text-gold uppercase">
+              <Sparkles className="size-3.5 shrink-0" strokeWidth={1.6} />
               {t(greetingKey(now.getHours()))}
             </p>
-            <h2 className="mt-2 break-words font-display text-2xl leading-tight text-navy sm:mt-3 sm:text-4xl">
+            <h2 className="mt-4 break-words font-display text-3xl leading-tight text-white sm:text-4xl lg:text-5xl">
               {user?.name || t("brand.name")}
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-navy/60 sm:mt-3 sm:text-base">
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base">
               {t("admin.dashboard.welcomeLead")}
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-navy/50 sm:mt-5 sm:gap-3">
-              <span className="rounded-full border border-navy/10 bg-[#faf8f4] px-3 py-1.5">
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-white/55">
+              <span className="rounded-full border border-white/15 bg-white/8 px-3 py-1.5">
                 {dateLabel}
               </span>
               <span
                 className={cn(
                   "rounded-full border px-3 py-1.5",
                   syncStatus === "synced"
-                    ? "border-emerald-500/25 bg-emerald-50 text-emerald-700"
+                    ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
                     : syncStatus === "error"
-                      ? "border-red-300/40 bg-red-50 text-red-700"
-                      : "border-navy/10 bg-[#faf8f4] text-navy/55",
+                      ? "border-red-400/30 bg-red-400/10 text-red-200"
+                      : "border-white/15 bg-white/8 text-white/55",
                 )}
               >
                 {syncLabel}
@@ -255,18 +235,18 @@ export function DashboardPage() {
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
             <Link
               to="/"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-navy bg-navy px-5 py-2.5 text-[0.7rem] tracking-[0.18em] text-white uppercase transition hover:bg-transparent hover:text-navy"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-gold/55 bg-gold px-5 py-2.5 text-[0.7rem] tracking-[0.18em] text-navy uppercase shadow-[0_12px_28px_-14px_rgba(200,169,106,0.8)] transition hover:bg-gold-soft"
             >
               {t("admin.backToSite")}
               <CtaArrow className="size-3.5 rtl:rotate-180" strokeWidth={1.6} />
             </Link>
             <Link
               to="/admin/messages"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-navy/15 bg-[#faf8f4] px-5 py-2.5 text-[0.7rem] tracking-[0.18em] text-navy uppercase transition hover:border-gold hover:bg-gold/10"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/8 px-5 py-2.5 text-[0.7rem] tracking-[0.18em] text-white uppercase transition hover:border-gold/45 hover:bg-gold/15 hover:text-gold"
             >
               {t("admin.dashboard.actions.reviewInbox")}
               {newMessages.length > 0 ? (
-                <span className="rounded-full bg-navy px-2 py-0.5 text-[0.65rem] text-white">
+                <span className="rounded-full bg-gold px-2 py-0.5 text-[0.65rem] text-navy">
                   {newMessages.length}
                 </span>
               ) : null}
@@ -275,7 +255,6 @@ export function DashboardPage() {
         </div>
       </section>
 
-      {/* KPI grid */}
       <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-6">
         <DashboardCard
           icon={Newspaper}
@@ -294,7 +273,7 @@ export function DashboardPage() {
           index={1}
         />
         <DashboardCard
-          icon={ImageIcon}
+          icon={Images}
           label={t("admin.dashboard.stats.images")}
           value={galleryCount}
           hint={t("admin.dashboard.stats.imagesHint")}
@@ -302,7 +281,7 @@ export function DashboardPage() {
           index={2}
         />
         <DashboardCard
-          icon={MessageSquare}
+          icon={Inbox}
           label={t("admin.dashboard.stats.messages")}
           value={inboxCount}
           trend={
@@ -314,7 +293,7 @@ export function DashboardPage() {
               : undefined
           }
           to="/admin/messages"
-          tone={newMessages.length > 0 ? "alert" : "default"}
+          tone="navy"
           index={3}
         />
         <DashboardCard
@@ -334,19 +313,12 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Quick actions */}
       <section className="mt-10">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[0.65rem] tracking-[0.2em] text-gold uppercase">
-              {t("admin.dashboard.actions.eyebrow")}
-            </p>
-            <h3 className="mt-1 font-display text-2xl text-navy">
-              {t("admin.dashboard.actions.title")}
-            </h3>
-          </div>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <AdminSectionTitle
+          eyebrow={t("admin.dashboard.actions.eyebrow")}
+          title={t("admin.dashboard.actions.title")}
+        />
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -358,16 +330,47 @@ export function DashboardPage() {
               >
                 <Link
                   to={action.to}
-                  className="group flex h-full flex-col rounded-2xl border border-navy/8 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/40"
+                  className={cn(
+                    "group flex h-full flex-col rounded-2xl border p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md",
+                    index === 1
+                      ? "border-white/10 bg-gradient-to-br from-navy to-ocean text-white hover:border-gold/40"
+                      : "border-navy/8 bg-white hover:border-gold/45",
+                  )}
                 >
-                  <span className="grid size-10 place-items-center rounded-full bg-navy/5 text-navy transition-colors group-hover:bg-gold">
-                    <Icon className="size-4" strokeWidth={1.5} />
+                  <span
+                    className={cn(
+                      "grid size-11 place-items-center rounded-2xl border transition-colors",
+                      index === 1
+                        ? "border-gold/35 bg-gold/15 text-gold group-hover:bg-gold group-hover:text-navy"
+                        : "border-navy/8 bg-sand text-navy group-hover:border-gold/40 group-hover:bg-gold",
+                    )}
+                  >
+                    <Icon className="size-5" strokeWidth={1.45} />
                   </span>
-                  <h4 className="mt-4 font-display text-lg text-navy">{action.title}</h4>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  <h4
+                    className={cn(
+                      "mt-4 font-display text-lg",
+                      index === 1 ? "text-white" : "text-navy",
+                    )}
+                  >
+                    {action.title}
+                  </h4>
+                  <p
+                    className={cn(
+                      "mt-2 flex-1 text-sm leading-relaxed",
+                      index === 1 ? "text-white/60" : "text-navy/55",
+                    )}
+                  >
                     {action.body}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-[0.65rem] tracking-[0.16em] text-navy/45 uppercase transition-colors group-hover:text-gold">
+                  <span
+                    className={cn(
+                      "mt-4 inline-flex items-center gap-1 text-[0.65rem] tracking-[0.16em] uppercase transition-colors",
+                      index === 1
+                        ? "text-white/45 group-hover:text-gold"
+                        : "text-navy/40 group-hover:text-gold",
+                    )}
+                  >
                     {t("admin.dashboard.viewAll")}
                     <ArrowUpRight className="size-3.5 rtl:rotate-180" strokeWidth={1.6} />
                   </span>
@@ -379,25 +382,22 @@ export function DashboardPage() {
       </section>
 
       <div className="mt-10 grid gap-6 xl:grid-cols-[1.35fr_0.85fr]">
-        {/* Inbox + leads */}
-        <section className="rounded-2xl border border-navy/8 bg-white shadow-sm">
-          <div className="flex items-center justify-between gap-3 border-b border-navy/8 px-5 py-4">
+        <section className="overflow-hidden rounded-2xl border border-navy/8 bg-white shadow-sm">
+          <div className="flex items-center justify-between gap-3 border-b border-navy/8 bg-gradient-to-l from-sand/60 to-white px-5 py-4">
             <div>
               <h3 className="font-display text-xl text-navy">{t("admin.dashboard.recent")}</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {t("admin.dashboard.recentHint")}
-              </p>
+              <p className="mt-1 text-xs text-navy/50">{t("admin.dashboard.recentHint")}</p>
             </div>
             <Link
               to="/admin/messages"
-              className="inline-flex items-center gap-1 text-[0.65rem] tracking-[0.16em] text-navy/60 uppercase transition-colors hover:text-gold"
+              className="inline-flex items-center gap-1 rounded-full border border-navy/10 bg-white px-3 py-1.5 text-[0.65rem] tracking-[0.14em] text-navy/60 uppercase transition hover:border-gold/40 hover:text-navy"
             >
               {t("admin.dashboard.viewAll")}
               <ArrowUpRight className="size-3.5 rtl:rotate-180" strokeWidth={1.6} />
             </Link>
           </div>
 
-          <div className="divide-y divide-border/80">
+          <div className="divide-y divide-navy/6">
             {recentInbox.map((row, index) => (
               <MessageRow key={row.id} row={row} index={index} />
             ))}
@@ -405,21 +405,21 @@ export function DashboardPage() {
 
           {leads.length > 0 ? (
             <div className="border-t border-navy/8 px-5 py-4">
-              <p className="text-[0.65rem] tracking-[0.18em] text-muted-foreground uppercase">
+              <p className="text-[0.65rem] tracking-[0.18em] text-navy/40 uppercase">
                 {t("admin.dashboard.leadsTitle")}
               </p>
               <ul className="mt-3 space-y-3">
                 {leads.slice(0, 3).map((lead, index) => (
                   <li
                     key={`${lead.email ?? "lead"}-${index}`}
-                    className="rounded-xl border border-navy/8 bg-[#faf8f4] px-4 py-3"
+                    className="rounded-xl border border-navy/8 bg-sand px-4 py-3"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-navy">
                           {lead.name || t("admin.dashboard.unknownLead")}
                         </p>
-                        <p className="mt-1 truncate text-xs text-muted-foreground" dir="ltr">
+                        <p className="mt-1 truncate text-xs text-navy/50" dir="ltr">
                           {lead.email || lead.phone || "—"}
                         </p>
                       </div>
@@ -437,26 +437,22 @@ export function DashboardPage() {
           ) : null}
         </section>
 
-        {/* Side panels */}
-        <div className="space-y-6">
           <section className="rounded-2xl border border-navy/8 bg-white p-5 shadow-sm">
-            <p className="text-[0.65rem] tracking-[0.2em] text-gold uppercase">
-              {t("admin.dashboard.health.eyebrow")}
-            </p>
-            <h3 className="mt-1 font-display text-xl text-navy">
-              {t("admin.dashboard.health.title")}
-            </h3>
-            <ul className="mt-5 space-y-2">
+            <AdminSectionTitle
+              eyebrow={t("admin.dashboard.health.eyebrow")}
+              title={t("admin.dashboard.health.title")}
+            />
+            <ul className="mt-5 space-y-1.5">
               {contentHealth.map((item) => {
                 const Icon = item.icon;
                 return (
                   <li key={item.to}>
                     <Link
                       to={item.to}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-transparent px-3 py-2.5 transition-colors hover:border-gold/25 hover:bg-[#faf8f4]"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2.5 transition-colors hover:border-gold/25 hover:bg-sand"
                     >
                       <span className="inline-flex items-center gap-3 text-sm text-navy">
-                        <span className="grid size-8 place-items-center rounded-full bg-navy/5 text-navy">
+                        <span className="grid size-9 place-items-center rounded-xl border border-navy/8 bg-sand text-navy">
                           <Icon className="size-3.5" strokeWidth={1.5} />
                         </span>
                         {item.label}
@@ -468,34 +464,6 @@ export function DashboardPage() {
               })}
             </ul>
           </section>
-
-          <section className="rounded-2xl border border-navy/8 bg-white p-5 shadow-sm">
-            <p className="text-[0.65rem] tracking-[0.2em] text-gold uppercase">
-              {t("admin.dashboard.activity")}
-            </p>
-            <h3 className="mt-1 font-display text-xl text-navy">
-              {t("admin.dashboard.activityTitle")}
-            </h3>
-            <ol className="mt-5 space-y-4">
-              {activity.map((item, index) => (
-                <li key={item.title} className="flex gap-3">
-                  <span className="mt-1 flex flex-col items-center">
-                    <span className="size-2.5 rounded-full bg-gold" />
-                    {index < activity.length - 1 ? (
-                      <span className="mt-1 w-px flex-1 bg-border" />
-                    ) : null}
-                  </span>
-                  <div className="pb-1">
-                    <p className="text-sm text-navy">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                      {item.meta}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </div>
       </div>
     </AdminLayout>
   );
@@ -509,9 +477,9 @@ function MessageRow({ row, index }: { row: MessageRecord; index: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
-      className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-[#faf8f4]"
+      className="flex items-start gap-4 px-5 py-4 transition-colors hover:bg-sand/80"
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-navy/5 text-[0.7rem] tracking-wide text-navy">
+      <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-gold/25 bg-gradient-to-br from-navy to-ocean text-[0.7rem] tracking-wide text-white">
         {row.name
           .split(" ")
           .slice(0, 2)
@@ -527,13 +495,11 @@ function MessageRow({ row, index }: { row: MessageRecord; index: number }) {
             tone={row.status === "new" ? "active" : "draft"}
           />
         </div>
-        <p className="mt-1 truncate text-xs text-muted-foreground" dir="ltr">
+        <p className="mt-1 truncate text-xs text-navy/45" dir="ltr">
           {row.email}
         </p>
         <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-navy/70">{row.message}</p>
-        <p className="mt-2 text-[0.65rem] tracking-[0.14em] text-muted-foreground uppercase">
-          {row.date}
-        </p>
+        <p className="mt-2 text-[0.65rem] tracking-[0.14em] text-navy/40 uppercase">{row.date}</p>
       </div>
     </motion.article>
   );

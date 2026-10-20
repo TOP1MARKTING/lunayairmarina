@@ -4,7 +4,7 @@
  */
 import heroMain from "@/assets/hero/hero-main.webp";
 import aboutMarina from "@/assets/about/yacht_side_transom_landscape.png";
-import adminLoginBg from "@/assets/admin/admin-login-bg.jpg";
+import adminLoginBg from "@/assets/admin/admin-login-bg.webp";
 import fleet01 from "@/assets/fleet/fleet-01.jpg";
 import fleet02 from "@/assets/fleet/fleet-02.jpg";
 import fleet03 from "@/assets/fleet/fleet-03.jpg";
@@ -79,6 +79,7 @@ const ASSET_BY_FILENAME: Record<string, string> = {
   "header-advertising.webp": headerAdvertising,
   "admin-bg.jpg": adminLoginBg,
   "admin-login-bg.jpg": adminLoginBg,
+  "admin-login-bg.webp": adminLoginBg,
 };
 
 /**

@@ -70,7 +70,7 @@ function AdminTestimonialsPage() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
   };

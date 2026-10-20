@@ -10,7 +10,6 @@ import { GallerySection } from "@/components/site/GallerySection";
 import { Testimonials } from "@/components/site/Testimonials";
 import { FaqSection } from "@/components/site/FaqSection";
 import { FleetSection } from "@/components/site/FleetSection";
-import { TeamSection } from "@/components/site/TeamSection";
 import { buildSeoHead } from "@/services/seoService";
 import { buildVideoObjectSchema, buildVideoOgMeta, SITE_VIDEOS } from "@/lib/videos";
 import { SITE_ORIGIN } from "@/lib/site";
@@ -59,7 +58,6 @@ function HomePage() {
       <WhyChooseUs variant="home" />
       <TrustPlaceholders />
       <FleetSection limit={3} />
-      <TeamSection />
       <BlogSection limit={3} />
       <GallerySection limit={5} />
       <Testimonials />

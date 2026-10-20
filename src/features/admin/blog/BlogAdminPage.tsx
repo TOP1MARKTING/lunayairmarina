@@ -168,7 +168,7 @@ function setParagraphLanguage(spans: BlogInline[], lang: "en" | "ar", value: str
 const fieldClass =
   "w-full rounded-md border border-navy/10 bg-white px-3 py-2 text-sm outline-none focus:border-navy/30";
 const selectClass =
-  "rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30";
+  "rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30";
 const toolBtnClass =
   "inline-flex items-center justify-center gap-2 rounded-md bg-navy px-4 py-2.5 text-[0.65rem] tracking-[0.14em] text-white uppercase transition-colors hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -666,7 +666,7 @@ export function BlogAdminPage() {
                   if (event.key === "Enter" || event.key === " ") setCursorBlockId(block.id);
                 }}
                 className={cn(
-                  "rounded-md border bg-[#faf8f4] p-4 text-start transition",
+                  "rounded-md border bg-sand p-4 text-start transition",
                   cursorBlockId === block.id
                     ? "border-gold ring-2 ring-gold/25"
                     : "border-navy/10 hover:border-navy/25",
@@ -872,7 +872,7 @@ export function BlogAdminPage() {
         {/* Tool panels */}
         <div className="space-y-4">
           {/* External links */}
-          <div className="rounded-xl border border-navy/10 bg-[#faf8f4] p-4">
+          <div className="rounded-xl border border-navy/10 bg-sand p-4">
             <div className="flex items-start gap-2">
               <Link className="mt-0.5 size-4 shrink-0 text-gold" strokeWidth={1.5} />
               <div>
@@ -937,7 +937,7 @@ export function BlogAdminPage() {
           </div>
 
           {/* Internal section links */}
-          <div className="rounded-xl border border-navy/10 bg-[#faf8f4] p-4">
+          <div className="rounded-xl border border-navy/10 bg-sand p-4">
             <div className="flex items-start gap-2">
               <ListPlus className="mt-0.5 size-4 shrink-0 text-gold" strokeWidth={1.5} />
               <div>
@@ -1013,7 +1013,7 @@ export function BlogAdminPage() {
           </div>
 
           {/* Images inside article */}
-          <div className="rounded-xl border border-navy/10 bg-[#faf8f4] p-4">
+          <div className="rounded-xl border border-navy/10 bg-sand p-4">
             <div className="flex items-start gap-2">
               <ImageIcon className="mt-0.5 size-4 shrink-0 text-gold" strokeWidth={1.5} />
               <div>
@@ -1208,7 +1208,7 @@ export function BlogAdminPage() {
 
         {/* Trending + status */}
         <div className="grid gap-5 sm:grid-cols-2">
-          <label className="flex items-center gap-3 rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3">
+          <label className="flex items-center gap-3 rounded-md border border-navy/10 bg-sand px-4 py-3">
             <input
               type="checkbox"
               checked={draft.featured}

@@ -5,8 +5,8 @@ export type ApiTransport = "http" | "server-fn";
 
 /**
  * Defaults to `server-fn` so SSR deployments (Vercel) call TanStack server
- * functions. The static cPanel build also uses `server-fn` against the remote
- * Vercel backend. Only emulator/legacy tooling opts into `http` (Firebase CF).
+ * functions. The static cPanel build also uses `server-fn` against a remote
+ * backend. Only emulator/legacy tooling opts into `http` (Firebase CF).
  */
 export function getApiTransport(): ApiTransport {
   const raw = (import.meta.env.VITE_API_TRANSPORT as string | undefined)?.trim();
@@ -17,9 +17,16 @@ export function isStaticHostingBuild(): boolean {
   return (import.meta.env.VITE_STATIC_HOSTING as string | undefined) === "true";
 }
 
-/** Static cPanel bundle calls the Vercel backend over HTTPS (cross-origin). */
+/** Dev/local can opt into the same remote server-fn backend as static hosting. */
+export function useRemoteServerFnExplicitly(): boolean {
+  const raw = (import.meta.env.VITE_USE_REMOTE_SERVER_FN as string | undefined)?.trim();
+  return raw === "1" || raw === "true";
+}
+
+/** Static cPanel (or explicit local flag) calls the remote backend over HTTPS. */
 export function usesRemoteServerFn(): boolean {
-  return isStaticHostingBuild() && getApiTransport() === "server-fn";
+  if (getApiTransport() !== "server-fn") return false;
+  return isStaticHostingBuild() || useRemoteServerFnExplicitly();
 }
 
 /**
@@ -33,25 +40,24 @@ export function getSiteOrigin(): string {
 }
 
 /**
- * Remote Vercel SSR/API origin. Static hosting calls server functions here.
- * Defaults to the production Vercel deployment when unset.
+ * Remote API origin for server-fn calls (Vercel). Static hosting / remote-dev use this.
  */
 export function getApiBaseUrl(): string {
   const fromEnv = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
-  const base = fromEnv || "https://www.lunayairmarina.com";
+  const base = fromEnv || "https://lunayairmarina.vercel.app";
   return base.replace(/\/$/, "");
 }
 
 /**
  * TanStack Start server-function path prefix.
- * Static builds use an absolute URL on the Vercel backend.
+ * Remote builds/dev use an absolute URL on the Vercel backend.
  */
 export function getTanStackServerFnBase(): string {
   const fromEnv = (import.meta.env.VITE_TSS_SERVER_FN_BASE as string | undefined)?.trim();
   if (fromEnv) {
     return fromEnv.endsWith("/") ? fromEnv : `${fromEnv}/`;
   }
-  if (isStaticHostingBuild()) {
+  if (usesRemoteServerFn()) {
     return `${getApiBaseUrl()}/_serverFn/`;
   }
   return "/_serverFn/";

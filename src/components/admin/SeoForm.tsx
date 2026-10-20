@@ -121,7 +121,7 @@ export function SeoForm() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
     setSaving(false);
@@ -201,7 +201,7 @@ export function SeoForm() {
                           "w-full rounded-xl px-3 py-2.5 text-start text-sm transition-colors",
                           serviceSlug === slug
                             ? "bg-navy text-white"
-                            : "text-navy/65 hover:bg-[#faf8f4] hover:text-navy",
+                            : "text-navy/65 hover:bg-sand hover:text-navy",
                         )}
                       >
                         {slug}
@@ -217,7 +217,7 @@ export function SeoForm() {
                           "w-full rounded-xl px-3 py-2.5 text-start text-sm transition-colors",
                           pageId === id
                             ? "bg-navy text-white"
-                            : "text-navy/65 hover:bg-[#faf8f4] hover:text-navy",
+                            : "text-navy/65 hover:bg-sand hover:text-navy",
                         )}
                       >
                         {t(`admin.seo.pages.${id}`)}
@@ -285,7 +285,7 @@ export function SeoForm() {
                     onChange={(event) =>
                       update({ title: { ...draft.title, [lang]: event.target.value } })
                     }
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 </label>
@@ -304,7 +304,7 @@ export function SeoForm() {
                         description: { ...draft.description, [lang]: event.target.value },
                       })
                     }
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 </label>
@@ -325,7 +325,7 @@ export function SeoForm() {
                         },
                       })
                     }
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 </label>
@@ -346,7 +346,7 @@ export function SeoForm() {
                         },
                       })
                     }
-                    className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                    className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                     dir={lang === "ar" ? "rtl" : "ltr"}
                   />
                 </label>
@@ -359,7 +359,7 @@ export function SeoForm() {
                   value={draft.canonicalPath ?? ""}
                   onChange={(event) => update({ canonicalPath: event.target.value })}
                   placeholder="/about"
-                  className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                  className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                   dir="ltr"
                 />
               </label>
@@ -370,7 +370,7 @@ export function SeoForm() {
                 <select
                   value={draft.robots ?? "index,follow"}
                   onChange={(event) => update({ robots: event.target.value })}
-                  className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none focus:border-navy/30"
+                  className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none focus:border-navy/30"
                 >
                   <option value="index,follow">index,follow</option>
                   <option value="noindex,follow">noindex,follow</option>

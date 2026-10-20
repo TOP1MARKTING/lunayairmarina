@@ -57,7 +57,7 @@ export function GalleryPicker({ value, onSelect, className }: GalleryPickerProps
       </button>
 
       {open ? (
-        <div className="rounded-xl border border-navy/10 bg-[#faf8f4] p-3">
+        <div className="rounded-xl border border-navy/10 bg-sand p-3">
           <p className="mb-3 text-[0.65rem] text-navy/50">{t("admin.blog.galleryPickHint")}</p>
           <div className="grid max-h-56 grid-cols-3 gap-2 overflow-y-auto sm:grid-cols-4">
             {items.map((item) => {

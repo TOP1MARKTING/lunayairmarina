@@ -11,7 +11,7 @@ export const FIREBASE_FUNCTIONS_REGION =
 
 /**
  * Base URL for Firebase Cloud Functions Gen2 HTTPS endpoints.
- * Emulator / optional Blaze deploy only — not used by the cPanel static build.
+ * Used by the cPanel static build when VITE_API_TRANSPORT=http.
  */
 export function getFunctionsBaseUrl(): string {
   const fromEnv = (import.meta.env.VITE_FUNCTIONS_BASE_URL as string | undefined)?.trim();

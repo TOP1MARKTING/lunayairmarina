@@ -422,7 +422,7 @@ export function UsersAdminPage() {
           <select
             value={draft.role}
             onChange={(event) => setRole(event.target.value as AdminRoleId)}
-            className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
+            className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
           >
             {roleOptions.map((role) => (
               <option key={role} value={role}>

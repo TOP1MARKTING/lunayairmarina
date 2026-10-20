@@ -30,7 +30,6 @@ import type {
   HomepageContent,
   ServiceContent,
   SiteSettings,
-  TeamMember,
   TestimonialContent,
   TrustContent,
   WhyContent,
@@ -79,8 +78,12 @@ export function isGalleryManaged(): boolean {
   return isCollectionManaged("gallery");
 }
 
-export function describeSaveResult(result: SaveResult, labels: { synced: string; local: string }) {
-  return result.ok && result.sync === "synced" ? labels.synced : labels.local;
+export function describeSaveResult(
+  result: SaveResult,
+  labels: { synced: string; failed?: string; local?: string },
+) {
+  if (result.ok && result.sync === "synced") return labels.synced;
+  return labels.failed || labels.local || "Save failed";
 }
 
 function notifySiteReload() {
@@ -127,45 +130,54 @@ async function mirrorFullCmsStore() {
   );
 }
 
-async function tryFirebaseWrite(task: () => Promise<void>): Promise<FirebaseSyncStatus> {
+async function persistToFirebase(
+  task: () => Promise<void>,
+  patch: Partial<CmsStore>,
+  onSuccess?: () => void,
+): Promise<SaveResult> {
   try {
     await task();
     try {
       await mirrorFullCmsStore();
     } catch {
-      // Collection write succeeded; mirror is best-effort.
+      // Collection write succeeded; full cms/v1 mirror is best-effort.
     }
-    return "synced";
-  } catch {
-    return "local";
+    onSuccess?.();
+    patchCmsStore({ ...patch, firebaseSync: "synced" });
+    notifySiteReload();
+    return { ok: true, sync: "synced" };
+  } catch (error) {
+    patchCmsStore({ firebaseSync: "error" });
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "FIREBASE_SAVE_FAILED",
+    };
   }
 }
 
+
 export async function saveSettings(settings: SiteSettings, logoUrl?: string): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     await setDoc(doc(getDb(), "settings", "general"), settings, { merge: true });
+  }, {
+settings, logoUrl: logoUrl ?? loadCmsStore().logoUrl,
   });
-  patchCmsStore({ settings, logoUrl: logoUrl ?? loadCmsStore().logoUrl, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function saveHomepage(homepage: HomepageContent): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     await setDoc(doc(getDb(), "homepage", "main"), homepage, { merge: true });
+  }, {
+homepage,
   });
-  patchCmsStore({ homepage, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function saveAbout(about: AboutContent): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     await setDoc(doc(getDb(), "about", "main"), about, { merge: true });
+  }, {
+about,
   });
-  patchCmsStore({ about, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function saveCopyBundle(copy: {
@@ -185,14 +197,13 @@ export async function saveCopyBundle(copy: {
     ar: diffCopyAgainstLocale(repaired.ar, arLocaleDict),
   };
 
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     // Replace (not merge) so repaired/removed keys actually leave Firestore.
     await setDoc(doc(getDb(), "copy", "en"), toPersist.en);
     await setDoc(doc(getDb(), "copy", "ar"), toPersist.ar);
+  }, {
+copy: toPersist,
   });
-  patchCmsStore({ copy: toPersist, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function patchCopySection(
@@ -211,58 +222,19 @@ export async function patchCopySection(
 }
 
 export async function saveWhy(why: WhyContent): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     await setDoc(doc(getDb(), "why", "main"), why, { merge: true });
+  }, {
+why,
   });
-  patchCmsStore({ why, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function saveTrust(trust: TrustContent): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     await setDoc(doc(getDb(), "trust", "main"), trust, { merge: true });
+  }, {
+trust,
   });
-  patchCmsStore({ trust, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
-}
-
-/** Load team from Firestore and keep the local CMS store in sync. */
-export async function loadTeam(): Promise<TeamMember[]> {
-  try {
-    const snap = await getDocs(collection(getDb(), "team"));
-    const team = snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Omit<TeamMember, "id">) }))
-      .sort((a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER));
-    patchCmsStore({ team });
-    return team;
-  } catch {
-    return loadCmsStore().team;
-  }
-}
-
-export async function saveTeam(team: TeamMember[]): Promise<SaveResult> {
-  markCollectionManaged("team");
-  const keepIds = new Set(team.map((member) => member.id).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
-    const db = getDb();
-    const existing = await getDocs(collection(db, "team"));
-    const batch = writeBatch(db);
-
-    for (const snap of existing.docs) {
-      if (!keepIds.has(snap.id)) batch.delete(snap.ref);
-    }
-
-    team.forEach((member) => {
-      const { id, ...data } = member;
-      batch.set(doc(db, "team", id), data, { merge: true });
-    });
-    await batch.commit();
-  });
-  patchCmsStore({ team, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 function normalizeAdvertisement(row: AdvertisementContent): AdvertisementContent {
@@ -310,7 +282,6 @@ export async function loadAdvertisements(): Promise<AdvertisementContent[]> {
 export async function saveAdvertisements(
   advertisements: AdvertisementContent[],
 ): Promise<SaveResult> {
-  markCollectionManaged("advertisements");
   const normalized = advertisements.map((item, index) =>
     normalizeAdvertisement({
       ...item,
@@ -320,7 +291,7 @@ export async function saveAdvertisements(
     }),
   );
   const keepIds = new Set(normalized.map((item) => item.id).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "advertisements"));
     const batch = writeBatch(db);
@@ -334,16 +305,14 @@ export async function saveAdvertisements(
       batch.set(doc(db, "advertisements", id), data, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ advertisements: normalized, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    advertisements: normalized,
+  }, () => markCollectionManaged("advertisements"));
 }
 
 export async function saveServices(services: ServiceContent[]): Promise<SaveResult> {
-  markCollectionManaged("services");
   const keepIds = new Set(services.map((service) => service.id || service.slug).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "services"));
     const batch = writeBatch(db);
@@ -358,10 +327,9 @@ export async function saveServices(services: ServiceContent[]): Promise<SaveResu
       batch.set(doc(db, "services", docId), { ...data, id: docId }, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ services, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    services,
+  }, () => markCollectionManaged("services"));
 }
 
 export async function saveGallery(gallery: GalleryContent[]): Promise<SaveResult> {
@@ -375,9 +343,8 @@ export async function saveGallery(gallery: GalleryContent[]): Promise<SaveResult
   }));
   const keepIds = new Set(safe.filter((item) => Boolean(item.src)).map((item) => item.id));
   const previous = loadCmsStore().gallery;
-  markGalleryManaged();
 
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "gallery"));
     const batch = writeBatch(db);
@@ -408,13 +375,9 @@ export async function saveGallery(gallery: GalleryContent[]): Promise<SaveResult
     }
 
     await batch.commit();
-  });
-  patchCmsStore({
+  }, {
     gallery: safe.filter((item) => Boolean(item.src)),
-    firebaseSync: sync,
-  });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, () => markGalleryManaged());
 }
 
 export async function fetchGalleryFromFirebase(): Promise<GalleryContent[]> {
@@ -530,9 +493,8 @@ export async function loadTestimonials(): Promise<TestimonialContent[]> {
 }
 
 export async function saveTestimonials(testimonials: TestimonialContent[]): Promise<SaveResult> {
-  markCollectionManaged("testimonials");
   const keepIds = new Set(testimonials.map((item) => item.id).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "testimonials"));
     const batch = writeBatch(db);
@@ -544,10 +506,9 @@ export async function saveTestimonials(testimonials: TestimonialContent[]): Prom
       batch.set(doc(db, "testimonials", id), data, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ testimonials, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    testimonials,
+  }, () => markCollectionManaged("testimonials"));
 }
 
 export async function loadFaq(): Promise<FaqContent[]> {
@@ -587,9 +548,8 @@ export async function loadFaq(): Promise<FaqContent[]> {
 }
 
 export async function saveFaq(faq: FaqContent[]): Promise<SaveResult> {
-  markCollectionManaged("faq");
   const keepIds = new Set(faq.map((item) => item.id).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "faq"));
     const batch = writeBatch(db);
@@ -601,16 +561,14 @@ export async function saveFaq(faq: FaqContent[]): Promise<SaveResult> {
       batch.set(doc(db, "faq", id), data, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ faq, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    faq,
+  }, () => markCollectionManaged("faq"));
 }
 
 export async function saveBlogPosts(blog: BlogContent[]): Promise<SaveResult> {
-  markCollectionManaged("blog");
   const keepIds = new Set(blog.map((post) => post.slug || post.id).filter(Boolean) as string[]);
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "blog"));
     const batch = writeBatch(db);
@@ -622,41 +580,37 @@ export async function saveBlogPosts(blog: BlogContent[]): Promise<SaveResult> {
       batch.set(doc(db, "blog", docId), post, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ blog, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    blog,
+  }, () => markCollectionManaged("blog"));
 }
 
 export async function saveSeoPage(pageId: SeoPageId, meta: SeoPageMeta): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
-    await setDoc(doc(getDb(), "seo", pageId), meta, { merge: true });
-  });
   const seo = { ...loadCmsStore().seo, [pageId]: meta };
-  patchCmsStore({ seo, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  return persistToFirebase(async () => {
+    await setDoc(doc(getDb(), "seo", pageId), meta, { merge: true });
+  }, {
+    seo,
+  });
 }
 
 export async function saveServiceSeo(slug: string, meta: SeoPageMeta): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
-    await setDoc(doc(getDb(), "seo", `service_${slug}`), meta, { merge: true });
-  });
   const serviceSeo = { ...loadCmsStore().serviceSeo, [slug]: meta };
-  patchCmsStore({ serviceSeo, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  return persistToFirebase(async () => {
+    await setDoc(doc(getDb(), "seo", `service_${slug}`), meta, { merge: true });
+  }, {
+    serviceSeo,
+  });
 }
 
 export async function savePageHeader(pageId: PageHeaderId, imageUrl: string): Promise<SaveResult> {
   const normalized = normalizePageHeaderUrl(pageId, imageUrl);
-  const sync = await tryFirebaseWrite(async () => {
-    await setDoc(doc(getDb(), "pageHeaders", pageId), { imageUrl: normalized }, { merge: true });
-  });
   const pageHeaders = { ...loadCmsStore().pageHeaders, [pageId]: normalized };
-  patchCmsStore({ pageHeaders, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  return persistToFirebase(async () => {
+    await setDoc(doc(getDb(), "pageHeaders", pageId), { imageUrl: normalized }, { merge: true });
+  }, {
+    pageHeaders,
+  });
 }
 
 export async function saveAllPageHeaders(
@@ -667,40 +621,37 @@ export async function saveAllPageHeaders(
     const value = pageHeaders[id];
     if (value) normalized[id] = normalizePageHeaderUrl(id, value);
   });
-  const sync = await tryFirebaseWrite(async () => {
-    const batch = writeBatch(getDb());
-    Object.entries(normalized).forEach(([id, imageUrl]) => {
-      if (imageUrl) batch.set(doc(getDb(), "pageHeaders", id), { imageUrl }, { merge: true });
-    });
-    await batch.commit();
-  });
-  patchCmsStore({
-    pageHeaders: { ...loadCmsStore().pageHeaders, ...normalized },
-    firebaseSync: sync,
-  });
-  notifySiteReload();
-  return { ok: true, sync };
+  return persistToFirebase(
+    async () => {
+      const batch = writeBatch(getDb());
+      Object.entries(normalized).forEach(([id, imageUrl]) => {
+        if (imageUrl) batch.set(doc(getDb(), "pageHeaders", id), { imageUrl }, { merge: true });
+      });
+      await batch.commit();
+    },
+    {
+      pageHeaders: { ...loadCmsStore().pageHeaders, ...normalized },
+    },
+  );
 }
 
 export async function saveAllSeo(
   seo: Partial<Record<SeoPageId, SeoPageMeta>>,
 ): Promise<SaveResult> {
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const batch = writeBatch(getDb());
     Object.entries(seo).forEach(([id, meta]) => {
       if (meta) batch.set(doc(getDb(), "seo", id), meta, { merge: true });
     });
     await batch.commit();
+  }, {
+seo,
   });
-  patchCmsStore({ seo, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
 }
 
 export async function saveMessages(messages: CmsMessage[]): Promise<SaveResult> {
-  markCollectionManaged("messages");
   const keepIds = new Set(messages.map((msg) => msg.id).filter(Boolean));
-  const sync = await tryFirebaseWrite(async () => {
+  return persistToFirebase(async () => {
     const db = getDb();
     const existing = await getDocs(collection(db, "messages"));
     const batch = writeBatch(db);
@@ -711,10 +662,9 @@ export async function saveMessages(messages: CmsMessage[]): Promise<SaveResult> 
       batch.set(doc(db, "messages", msg.id), msg, { merge: true });
     });
     await batch.commit();
-  });
-  patchCmsStore({ messages, firebaseSync: sync });
-  notifySiteReload();
-  return { ok: true, sync };
+  }, {
+    messages,
+  }, () => markCollectionManaged("messages"));
 }
 
 export async function ingestContactLead(input: {
@@ -744,11 +694,16 @@ export async function ingestContactLead(input: {
 
   const store = loadCmsStore();
   const messages = [lead, ...store.messages].slice(0, 100);
-  patchCmsStore({ messages, firebaseSync: "local" });
 
-  await setDoc(doc(getDb(), "messages", lead.id), lead);
-  patchCmsStore({ messages, firebaseSync: "synced" });
-  return lead;
+  try {
+    await setDoc(doc(getDb(), "messages", lead.id), lead);
+    patchCmsStore({ messages, firebaseSync: "synced" });
+    notifySiteReload();
+    return lead;
+  } catch (error) {
+    patchCmsStore({ firebaseSync: "error" });
+    throw error instanceof Error ? error : new Error("FIREBASE_SAVE_FAILED");
+  }
 }
 
 export async function fetchMessagesFromFirebase(): Promise<CmsMessage[]> {

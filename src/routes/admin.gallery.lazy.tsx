@@ -141,7 +141,7 @@ function AdminGalleryPage() {
     setStatus(
       describeSaveResult(result, {
         synced: t("admin.cms.savedSynced"),
-        local: t("admin.cms.savedLocal"),
+        failed: t("admin.cms.savedFailed"),
       }),
     );
   };
@@ -218,10 +218,10 @@ function AdminGalleryPage() {
                   src={src}
                   alt={image.caption[language]}
                   loading="lazy"
-                  className="aspect-4/3 w-full bg-[#faf8f4] object-cover"
+                  className="aspect-4/3 w-full bg-sand object-cover"
                 />
               ) : (
-                <div className="flex aspect-4/3 w-full items-center justify-center bg-[#faf8f4] px-4 text-center text-xs text-navy/40">
+                <div className="flex aspect-4/3 w-full items-center justify-center bg-sand px-4 text-center text-xs text-navy/40">
                   {image.caption[language]}
                 </div>
               )}

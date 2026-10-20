@@ -57,7 +57,7 @@ export function DataTable<T>({ columns, rows, getRowId, actions }: DataTableProp
       <div className="admin-table-scroll hidden overflow-x-auto md:block">
         <table className="w-full min-w-[640px] text-start text-sm">
           <thead>
-            <tr className="border-b border-navy/8 bg-[#faf8f4]">
+            <tr className="border-b border-navy/8 bg-sand">
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -93,7 +93,7 @@ export function DataTable<T>({ columns, rows, getRowId, actions }: DataTableProp
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.04, duration: 0.4 }}
-                  className="border-b border-navy/6 transition-colors last:border-0 hover:bg-[#faf8f4]/80"
+                  className="border-b border-navy/6 transition-colors last:border-0 hover:bg-sand/80"
                 >
                   {columns.map((column) => (
                     <td
@@ -159,6 +159,66 @@ export function StatusBadge({
   );
 }
 
+/** Light-switch style control for Active ↔ Draft. */
+export function AdminStatusToggle({
+  active,
+  onChange,
+  activeLabel,
+  draftLabel,
+  disabled,
+}: {
+  active: boolean;
+  onChange: (next: boolean) => void;
+  activeLabel: string;
+  draftLabel: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      disabled={disabled}
+      onClick={(event) => {
+        event.stopPropagation();
+        onChange(!active);
+      }}
+      title={active ? draftLabel : activeLabel}
+      className={cn(
+        "group inline-flex items-center gap-2 rounded-full border px-1.5 py-1 transition-all",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold",
+        "disabled:cursor-not-allowed disabled:opacity-50",
+        active
+          ? "border-emerald-500/25 bg-emerald-500/10"
+          : "border-navy/12 bg-navy/5",
+      )}
+    >
+      <span
+        className={cn(
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+          active ? "bg-emerald-600" : "bg-navy/30",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute size-5 rounded-full bg-white shadow-md transition-all duration-200",
+            "start-0.5",
+            active && "start-[1.35rem]",
+          )}
+        />
+      </span>
+      <span
+        className={cn(
+          "min-w-[3.25rem] pe-1.5 text-[0.68rem] font-medium tracking-wide",
+          active ? "text-emerald-800" : "text-navy/55",
+        )}
+      >
+        {active ? activeLabel : draftLabel}
+      </span>
+    </button>
+  );
+}
+
 export function RowAction({
   icon: Icon,
   label,
@@ -191,10 +251,10 @@ export function RowAction({
       aria-label={label}
       title={label}
       className={cn(
-        "grid size-11 place-items-center rounded-xl border transition-colors",
+        "grid size-11 place-items-center rounded-xl border transition-all",
         tone === "danger"
           ? "border-red-200 text-red-500 hover:border-red-400 hover:bg-red-50"
-          : "border-navy/10 text-navy/55 hover:border-navy/25 hover:bg-[#faf8f4] hover:text-navy",
+          : "border-navy/10 bg-white text-navy/55 hover:border-gold/45 hover:bg-gold/10 hover:text-navy",
       )}
     >
       <Icon className="size-4" strokeWidth={1.5} />

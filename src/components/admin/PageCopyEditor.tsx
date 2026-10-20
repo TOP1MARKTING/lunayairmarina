@@ -375,7 +375,7 @@ export function PageCopyEditor() {
         ? t("admin.cms.savedSynced")
         : describeSaveResult(results[0]!, {
             synced: t("admin.cms.savedSynced"),
-            local: t("admin.cms.savedLocal"),
+            failed: t("admin.cms.savedFailed"),
           }),
     );
     setSaving(false);
@@ -391,7 +391,7 @@ export function PageCopyEditor() {
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
           placeholder={t("admin.search")}
-          className="mb-2 w-full rounded-lg border border-navy/10 bg-[#faf8f4] px-3 py-2.5 text-xs outline-none focus:border-navy/30"
+          className="mb-2 w-full rounded-lg border border-navy/10 bg-sand px-3 py-2.5 text-xs outline-none focus:border-navy/30"
         />
         <ul className="admin-hide-scrollbar flex max-h-none gap-2 overflow-x-auto pb-1 lg:max-h-[70vh] lg:flex-col lg:space-y-1 lg:gap-0 lg:overflow-y-auto lg:pb-0">
           {visibleSections.map((item) => (
@@ -403,7 +403,7 @@ export function PageCopyEditor() {
                   "min-h-10 w-full whitespace-nowrap rounded-xl px-3 py-2.5 text-start text-sm transition-colors",
                   sectionId === item.id
                     ? "bg-navy text-white"
-                    : "bg-[#faf8f4] text-navy/65 hover:text-navy lg:bg-transparent",
+                    : "bg-sand text-navy/65 hover:text-navy lg:bg-transparent",
                 )}
               >
                 {t(item.labelKey)}
@@ -445,14 +445,14 @@ export function PageCopyEditor() {
                       rows={3}
                       value={readString(copy[lang], field.path)}
                       onChange={(event) => setField(lang, field.path, event.target.value)}
-                      className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
+                      className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
                       dir={lang === "ar" ? "rtl" : "ltr"}
                     />
                   ) : (
                     <input
                       value={readString(copy[lang], field.path)}
                       onChange={(event) => setField(lang, field.path, event.target.value)}
-                      className="rounded-md border border-navy/10 bg-[#faf8f4] px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
+                      className="rounded-md border border-navy/10 bg-sand px-4 py-3 text-sm outline-none transition-colors focus:border-navy/30"
                       dir={lang === "ar" ? "rtl" : "ltr"}
                     />
                   )}
